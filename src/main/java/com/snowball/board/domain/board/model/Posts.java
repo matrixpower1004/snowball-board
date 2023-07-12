@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 @Builder
 public class Posts {
+
     private Long id;
     private Long userId;
     private String title;
@@ -20,4 +21,6 @@ public class Posts {
     private String userRole;
     private Timestamp createdAt;
     private Timestamp updatedAt;
+
 }
+
