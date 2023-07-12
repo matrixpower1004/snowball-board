@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 @Builder
 public class Reply {
+
     private Long id;
     private Long commentId;
     private Long userId;
@@ -17,6 +18,5 @@ public class Reply {
     private String content;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-
-    // Constructors, getters, and setters
 }
+

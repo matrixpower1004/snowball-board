@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 @Builder
 public class CommentHistory {
+
     private Long id;
     private Long userId;
     private Long postId;
@@ -19,3 +20,4 @@ public class CommentHistory {
     private Timestamp updatedAt;
     private String stateCode;
 }
+

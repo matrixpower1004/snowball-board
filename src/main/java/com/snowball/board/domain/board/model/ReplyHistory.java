@@ -12,6 +12,7 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 @Builder
 public class ReplyHistory {
+
     private Long id;
     private Long commentId;
     private Long postId;
@@ -21,3 +22,4 @@ public class ReplyHistory {
     private Timestamp updatedAt;
     private String stateCode;
 }
+

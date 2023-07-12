@@ -18,5 +18,4 @@ public class Comment {
     private String content;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-
 }

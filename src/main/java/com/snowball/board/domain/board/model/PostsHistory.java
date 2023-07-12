@@ -11,6 +11,7 @@ import java.sql.Timestamp;
 @EqualsAndHashCode
 @Builder
 public class PostsHistory {
+
     private Long id;
     private Long userId;
     private Long postId;
@@ -21,3 +22,4 @@ public class PostsHistory {
     private Timestamp updatedAt;
     private String stateCode;
 }
+
