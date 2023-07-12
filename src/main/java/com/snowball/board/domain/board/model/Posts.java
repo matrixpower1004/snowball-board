@@ -20,6 +20,5 @@ public class Posts {
     private UserRole userRole;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-
 }
 

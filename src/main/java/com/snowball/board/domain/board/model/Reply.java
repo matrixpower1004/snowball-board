@@ -18,4 +18,3 @@ public class Reply {
     private Timestamp createdAt;
     private Timestamp updatedAt;
 }
-

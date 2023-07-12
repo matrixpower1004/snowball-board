@@ -1,7 +1,7 @@
 package com.snowball.board.domain.board.model;
 
+import com.snowball.board.common.util.StateType;
 import lombok.*;
-
 import java.sql.Timestamp;
 
 @Getter
@@ -19,6 +19,6 @@ public class ReplyHistory {
     private String content;
     private Timestamp createdAt;
     private Timestamp updatedAt;
-    private String stateCode;
+    private StateType stateCode;
 }
 
