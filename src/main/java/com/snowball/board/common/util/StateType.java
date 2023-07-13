@@ -6,9 +6,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum StateType {
-    BLIND("블라인드"),
+    HIDE("블라인드"),
     DELETE("삭제"),
-    DISSOLUTION("해체");
+    SHOW("해제");
 
     private String value;
 
