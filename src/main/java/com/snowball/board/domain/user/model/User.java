@@ -1,12 +1,14 @@
 package com.snowball.board.domain.user.model;
 
 import com.snowball.board.common.util.UserRole;
+import lombok.Getter;
 import org.hibernate.annotations.DynamicInsert;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
 
 @Entity
+@Getter
 @DynamicInsert
 @Table(name = "user_tb")
 public class User {
