@@ -1,15 +1,29 @@
 package com.snowball.board.domain.user.model;
 
 import com.snowball.board.common.util.UserRole;
-import lombok.Getter;
+import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Getter
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 @Table(name = "user_tb")
-public class User {
+@DynamicInsert
+@DynamicUpdate
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,11 +47,61 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role")
-    private UserRole userRole = UserRole.BEGINNER;
+    @ColumnDefault("'BEGINNER'")
+    private UserRole userRole;
 
     @Column(name = "created_at")
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private Timestamp createdAt;
 
     @Column(name = "updated_at")
+    @ColumnDefault("CURRENT_TIMESTAMP")
     private Timestamp updatedAt;
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updateNickName(String nickName) {
+        this.nickName = nickName;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+
+        authorities.add(new SimpleGrantedAuthority("ROLE_" + this.getUserRole().name()));
+        return authorities;
+    }
+
+    //Username -> userAccount
+    //UserName -> userName
+    @Override
+    public String getUsername() {
+        return userAccount;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
+    }
 }
