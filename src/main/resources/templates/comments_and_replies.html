@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>댓글과 답글</title>
+</head>
+<body>
+<h1>댓글과 답글</h1>
+
+<form method="post" id="commentForm" action="/api/post/{postId}/comment(postId=${postId})">
+  <label for="comment">댓글:</label>
+  <input type="text" id="comment" name="content" required>
+  <button type="submit">댓글 추가</button>
+</form>
+
+<div id="comments-container">
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+  function getCommentsByPostId(postId) {
+    $.ajax({
+      url: `/api/post/${postId}/comments`,
+      type: 'GET',
+      dataType: 'json',
+      success: function (comments) {
+        const commentsContainer = $('#comments-container');
+        commentsContainer.empty();
+
+        if (comments && comments.length > 0) {
+          comments.forEach(comment => {
+            const commentElement = $(`<div>
+                                          <p>댓글 ID: ${comment.id}</p>
+                                          <p>사용자 ID: ${comment.userId}</p>
+                                          <p>내용: ${comment.content}</p>
+                                          <p>작성 시간: ${comment.createdAt}</p>
+                                          <hr>
+                                        </div>`);
+
+            if (comment.replies && comment.replies.length > 0) {
+              const repliesElement = $('<ul></ul>');
+              comment.replies.forEach(reply => {
+                const replyElement = $(`<li>
+                                            <p>답글 ID: ${reply.id}</p>
+                                            <p>사용자 ID: ${reply.userId}</p>
+                                            <p>내용: ${reply.content}</p>
+                                            <p>작성 시간: ${reply.createdAt}</p>
+                                            <hr>
+                                          </li>`);
+                repliesElement.append(replyElement);
+              });
+
+              commentElement.append(repliesElement);
+            }
+
+            commentsContainer.append(commentElement);
+          });
+        } else {
+          commentsContainer.text('댓글이 없습니다.');
+        }
+      },
+      error: function (error) {
+        console.error('댓글을 가져오는 중 오류가 발생했습니다:', error);
+      }
+    });
+  }
+
+  const postId = [];
+  getCommentsByPostId(postId);
+
+  $('#commentForm').submit(function (event) {
+    event.preventDefault();
+    const formData = $(this).serialize();
+    $.ajax({
+      url: $(this).attr('action'),
+      type: 'POST',
+      data: formData,
+      success: function (comment) {
+        getCommentsByPostId(postId);
+      },
+      error: function (error) {
+        console.error('댓글을 추가하는 중 오류가 발생했습니다:', error);
+      }
+    });
+  });
+</script>
+</body>
+</html>
