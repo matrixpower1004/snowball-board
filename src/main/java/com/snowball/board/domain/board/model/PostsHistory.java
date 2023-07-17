@@ -18,7 +18,6 @@ public class PostsHistory {
     private Long postId;
     private String title;
     private String content;
-//  private UserRole userRole;
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private StateType stateCode;
