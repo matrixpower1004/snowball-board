@@ -14,7 +14,6 @@ public class ReplyHistory {
 
     private Long id;
     private Long commentId;
-    private Long postId;
     private Long userId;
     private String content;
     private Timestamp createdAt;
