@@ -1,7 +1,7 @@
 package com.snowball.board.domain.board.model;
 
 import lombok.*;
-// import com.snowball.board.common.util.UserRole;
+import com.snowball.board.common.util.UserRole;
 import java.sql.Timestamp;
 
 @Getter
