@@ -1,23 +1,24 @@
-package com.snowball.board.domain.board.dto;
+package com.snowball.board.domain.board.model;
 
+import lombok.*;
+// import com.snowball.board.common.util.UserRole;
 import java.sql.Timestamp;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.Builder;
-
-
 @Getter
-@Setter
+@NoArgsConstructor
 @AllArgsConstructor
+@ToString
+@EqualsAndHashCode
 @Builder
-public class PostsDto {
+public class Posts {
+
     private Long id;
     private Long userId;
     private String title;
     private String content;
     private boolean blindState;
+    private UserRole userRole;
     private Timestamp createdAt;
     private Timestamp updatedAt;
 }
+
