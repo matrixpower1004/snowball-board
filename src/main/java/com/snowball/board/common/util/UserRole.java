@@ -1,16 +1,19 @@
 package com.snowball.board.common.util;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public enum UserRole {
     BLACK("블랙리스트"),
     BEGINNER("새싹회원"),
     EXPERT("우수회원"),
-    ADMIN("관리자");
+    ADMIN("관리자"),
+    USER("일반회원"); // USER 상수 추가
 
-    private String value;
+    private final String value;
 
+    UserRole(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
+    }
 }
