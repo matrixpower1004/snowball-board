@@ -19,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @RestControllerAdvice
 public class RestExceptionHandlerAdvisor extends ResponseEntityExceptionHandler {
+
     @ExceptionHandler(value = {ConstraintViolationException.class, InvalidAuthException.class, IllegalStateException.class})
     public ResponseEntity<ExceptionDto> exceptionHandler(ConstraintViolationException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -69,6 +70,10 @@ public class RestExceptionHandlerAdvisor extends ResponseEntityExceptionHandler 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .body(ExceptionDto.builder().statusCode(HttpStatus.NO_CONTENT.value())
                         .message(String.format("%s", exception.getMessage()))
+<<<<<<< HEAD
                         .build());
     }
+=======
+                        .build());}
+>>>>>>> 843df07 (feat: #11 - add ExceptionHandlerAdvisor)
 }
