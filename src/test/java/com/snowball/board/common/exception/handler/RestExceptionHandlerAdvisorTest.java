@@ -15,9 +15,6 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import static org.junit.jupiter.api.Assertions.*;
 class RestExceptionHandlerAdvisorTest {
-
-    private final RestExceptionHandlerAdvisor restExceptionHandlerAdvisor = new RestExceptionHandlerAdvisor();
-
     private final RestExceptionHandlerAdvisor exceptionHandlerAdvisor = new RestExceptionHandlerAdvisor();
 
     @Test
