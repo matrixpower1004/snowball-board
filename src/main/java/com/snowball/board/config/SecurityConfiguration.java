@@ -1,6 +1,5 @@
 package com.snowball.board.config;
 
-import com.snowball.board.common.util.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,14 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import javax.servlet.Filter;
-
-import static org.springframework.http.HttpMethod.DELETE;
-import static org.springframework.http.HttpMethod.GET;
-import static org.springframework.http.HttpMethod.POST;
-import static org.springframework.http.HttpMethod.PUT;
-import static org.springframework.http.HttpMethod.PATCH;
-
 
 @Configuration
 @EnableWebSecurity
@@ -28,8 +19,8 @@ import static org.springframework.http.HttpMethod.PATCH;
 @EnableMethodSecurity
 public class SecurityConfiguration {
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-
+    private final AuthorizationFilter authenticationFilter;
+    private final ExceptionHandlerFilter exceptionHandlerFilter;
     private final AuthenticationProvider authenticationProvider;
 
     @Bean
@@ -41,7 +32,7 @@ public class SecurityConfiguration {
                 .antMatchers(
                         "/login",
                         "/register",
-                        "/api/user/login",
+                        "/api/user/longin",
                         "/api/user/register",
                         "/api/user/check-nickName",
                         "/api/auth/**",
@@ -89,7 +80,8 @@ public class SecurityConfiguration {
                 //.formLogin().disable();
                 .and()
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(exceptionHandlerFilter, AuthorizationFilter.class);
         http.headers().frameOptions().disable();
 
         return http.build();
