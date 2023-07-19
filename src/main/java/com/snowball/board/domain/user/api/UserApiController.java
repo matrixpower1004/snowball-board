@@ -2,8 +2,10 @@ package com.snowball.board.domain.user.api;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.snowball.board.common.util.ApiResponse;
-import com.snowball.board.domain.auth.dto.AuthenticationResponse;
-import com.snowball.board.domain.user.dto.*;
+import com.snowball.board.domain.user.dto.UpdateInfoRequest;
+import com.snowball.board.domain.user.dto.UpdatePasswordRequest;
+import com.snowball.board.domain.user.dto.ValidateEmailDuplicateRequest;
+import com.snowball.board.domain.user.dto.ValidateNickNameDuplicateRequest;
 import com.snowball.board.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
