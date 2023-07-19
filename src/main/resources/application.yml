@@ -31,6 +31,15 @@ spring:
       default_batch_fetch_size: 100
     open-in-view: true
 
+application:
+  security:
+    jwt:
+      secret-key: 0YLkkTt8BMSJIwLyR6GSgaCgDcbE5tbzawnTNT6d2EUEECeWm0KpLYVxXKTezwPL
+      expiration: 3600000  # 1 hour
+      #expiration: 1  # 1 milliSec
+      refresh-token:
+        expiration: 604800000 # 7 days
+
 logging:
   level:
     '[com.snowball.board]': DEBUG
