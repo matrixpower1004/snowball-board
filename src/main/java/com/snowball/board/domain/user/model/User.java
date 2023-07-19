@@ -1,6 +1,7 @@
 package com.snowball.board.domain.user.model;
 
 import com.snowball.board.common.util.UserRole;
+import com.snowball.board.domain.token.model.Token;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.DynamicInsert;
@@ -69,6 +70,9 @@ public class User implements UserDetails {
     public void updatePassword(String password) {
         this.password = password;
     }
+
+    @OneToMany(mappedBy = "user")
+    public List<Token> tokens;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
