@@ -18,11 +18,7 @@ public class UserApiController {
 
     private final UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody @Valid RegisterRequest userRegisterRequest) {
-
-        return ResponseEntity.ok(userService.register(userRegisterRequest));
-    }
+    // TODO: 2023-07-19 api for check duplicate email 
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> getUserInfo(@PathVariable Long id) throws JsonProcessingException {
@@ -34,6 +30,12 @@ public class UserApiController {
     public ResponseEntity<ApiResponse> validateNickNameDuplicate(@RequestBody @Valid ValidateNickNameDuplicateRequest validateNickNameDuplicateRequest) {
 
         return ResponseEntity.ok(userService.validateDuplicateNickName(validateNickNameDuplicateRequest));
+    }
+
+    @PostMapping("/check-email")
+    public ResponseEntity<ApiResponse> validateEmailDuplicate(@RequestBody @Valid ValidateEmailDuplicateRequest validateEmailDuplicateRequest) {
+
+        return ResponseEntity.ok(userService.validateDuplicateEmail(validateEmailDuplicateRequest));
     }
 
     @PatchMapping("/{id}/password")
