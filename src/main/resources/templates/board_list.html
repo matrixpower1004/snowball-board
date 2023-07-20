@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>SnowBoard</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+      loadPosts(0); // 첫번째 페이지 로드
+    });
+
+    function loadPosts(page) {
+      $.ajax({
+        url: "/api/posts?page=" + page + "&size=6", // 사이즈 10 단위 증가
+        type: "GET",
+        dataType: "json",
+        success: function(response) {
+          var posts = response.content;
+          var table = $("#postTable");
+
+          table.empty();
+
+          var header = "<tr>" +
+                  "<th>글번호</th>" +
+                  "<th>글제목</th>" +
+                  "<th>작성자</th>" +
+                  "<th>작성일자</th>" +
+                  "</tr>";
+
+          table.append(header);
+
+          for (var i = 0; i < posts.length; i++) {
+            var post = posts[i];
+
+            // createdAt 'yyyy-mm-dd hh24:mi:ss 포맷
+            var formattedCreatedAt = formatDate(post.createdAt);
+
+            var row =
+                    "<tr>" +
+                    "<td>" + post.id + "</td>" +
+                    "<td>" + post.title + "</td>" +
+                    "<td>" + post.nickName + "</td>" +
+                    "<td>" + formattedCreatedAt + "</td>" +
+                    "</tr>";
+
+            table.append(row);
+          }
+
+          // 페이징 처리
+          createPaginationButtons(response, page);
+        },
+        error: function(xhr, status, error) {
+          console.log("Error: " + error);
+        }
+      });
+    }
+
+    function formatDate(dateString) {
+      var date = new Date(dateString);
+      var year = date.getFullYear();
+      var month = ("0" + (date.getMonth() + 1)).slice(-2);
+      var day = ("0" + date.getDate()).slice(-2);
+      var hours = ("0" + date.getHours()).slice(-2);
+      var minutes = ("0" + date.getMinutes()).slice(-2);
+      var seconds = ("0" + date.getSeconds()).slice(-2);
+
+      return year + "-" + month + "-" + day + " " + hours + ":" + minutes + ":" + seconds;
+    }
+
+    //페이지 버튼 생성
+    function createPaginationButtons(response, currentPage) {
+      var totalPages = response.totalPages;
+
+      var pagination = $("#pagination");
+      pagination.empty();
+
+      var paginationHtml = "";
+
+      // 블록 수 10단위 계산
+      var currentBlock = Math.floor(currentPage / 10);
+
+      // 시작과 끝 페이지 수 계산
+      var startPage = currentBlock * 10 + 1;
+      var endPage = Math.min(startPage + 9, totalPages);
+
+      // 앞 블록 페이지 버튼 - 10
+      paginationHtml += '<button onclick="loadPosts(' + (startPage - 11) + ')"' + (currentBlock === 0 ? ' disabled' : '') + '>&lt;&lt;</button>';
+
+      // 앞 블록 페이지 버튼 - 1
+      paginationHtml += '<button onclick="loadPosts(' + (currentPage - 1) + ')"' + (currentPage === 0 ? ' disabled' : '') + '>&lt;</button>';
+
+      // 페이지 n ~ n + 10 단위
+      for (var i = startPage; i <= endPage; i++) {
+        paginationHtml += '<button onclick="loadPosts(' + (i - 1) + ')"' + (i === currentPage + 1 ? ' class="active"' : '') + '>' + i + '</button>';
+      }
+
+      // 다음 블록 페이지 버튼
+      paginationHtml += '<button onclick="loadPosts(' + (currentPage + 1) + ')"' + (currentPage === totalPages - 1 ? ' disabled' : '') + '>&gt;</button>';
+
+      // 다음 블록 페이지 버튼 +10
+      paginationHtml += '<button onclick="loadPosts(' + (startPage + 10) + ')"' + (endPage === totalPages ? ' disabled' : '') + '>&gt;&gt;</button>';
+
+      pagination.append(paginationHtml);
+    }
+
+    // tr을 클릭했을 때, 해당 게시글의 postId를 추출하여 board/{postId} 페이지로 이동
+    $(document).on('click', 'tr', function() {
+      var postId = $(this).find('td:first').text(); // 첫 번째 td에 있는 postId 추출
+      var title = $(this).find('td:eq(1)').text();  // 두 번째 td에 있는 title 추출
+      var nickName = $(this).find('td:eq(2)').text();  // 세 번째 td에 있는 nickName 추출
+      var createdAt = $(this).find('td:last').text();  // 마지막 td에 있는 createdAt 추출
+      var url = '/board/' + encodeURIComponent(postId) + '?title=' + encodeURIComponent(title)
+              + '&nickName=' + encodeURIComponent(nickName)
+              + '&createdAt=' + encodeURIComponent(createdAt);  // board/{postId} URL 생성
+      window.location.href = url;                   // 페이지 이동
+    });
+  </script>
+  <style>
+    .active {
+      background-color: lightblue;
+    }
+    /* hover highlight 효과 */
+    #postTable tr:hover {
+      background-color: #f1f1f1;
+      cursor: pointer;
+    }
+    /* 글쓰기 버튼 디자인 */
+    #writeButton {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      padding: 10px 20px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* 조회 폼 디자인 */
+    #searchForm {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    #searchForm select, #searchForm input[type="text"], #searchForm button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+<h1>게시글 목록</h1>
+<!-- 조회 폼 -->
+<form id="searchForm">
+  <select id="searchOption">
+    <option value="author">작성자</option>
+    <option value="title">제목</option>
+    <option value="content">내용</option>
+  </select>
+  <input type="text" id="searchText" placeholder="검색어를 입력하세요.">
+  <button type="button" onclick="searchPosts()">조회</button>
+</form>
+<table id="postTable">
+  <thead>
+  <tr>
+    <th>글번호</th>
+    <th>글제목</th>
+    <th>작성자</th>
+    <th>작성일자</th>
+  </tr>
+  </thead>
+  <tbody>
+  <!-- 동적 데이터 area -->
+  </tbody>
+</table>
+<div id="pagination"></div>
+
+<!-- 글쓰기 버튼 -->
+<div id="writeButton" onclick="goToWritePage()">글쓰기</div>
+
+<script>
+  // 글쓰기 페이지로 이동
+  function goToWritePage() {
+    window.location.href = "/board/write";
+  }
+
+  // 검색 조회 기능
+  function searchPosts() {
+    var searchOption = $("#searchOption").val();
+    var searchText = $("#searchText").val();
+
+    // 원하는 방식으로 검색 기능 구현
+    // 이 부분은 서버와 통신하여 원하는 데이터를 가져오도록 작성하시면 됩니다.
+    console.log("Search Option:", searchOption);
+    console.log("Search Text:", searchText);
+  }
+</script>
+</body>
+</html>

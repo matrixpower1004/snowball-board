@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SnowBoard</title>
+  <!-- include libraries(jQuery, bootstrap) -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+  <!-- include summernote css/js -->
+  <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote.min.js"></script>
+</head>
+<body>
+<h1>게시판 작성</h1>
+<form id="postForm">
+  <label for="title">제목:</label>
+  <input type="text" id="title" name="title" required>&nbsp;&nbsp;
+  <button type="submit">등록</button>&nbsp;&nbsp;<button id="cancelBtn">취소</button>
+  <!-- Summernote 편집기를 사용할 textarea 엘리먼트에만 클래스 추가 -->
+  <textarea class="summernote" name="content"></textarea>
+</form>
+
+<!-- Summernote 초기화 스크립트와 옵션 설정 -->
+<script>
+  $(document).ready(function() {
+    // 원하는 옵션에 맞게 Summernote 초기화 설정
+    $('.summernote').summernote({
+      placeholder: '게시글 내용을 입력해주세요.', // Placeholder 텍스트
+      height: 300,
+      minHeight: null,
+      maxHeight: null,
+      focus: false,
+      toolbar: [
+        ['style', ['bold', 'italic', 'underline', 'clear']],
+        ['font', ['strikethrough', 'superscript', 'subscript']],
+        ['fontsize', ['fontsize']],
+        ['color', ['forecolor', 'backcolor']], // 글꼴색과 글자 배경색 버튼 추가
+        ['para', ['ul', 'ol', 'paragraph']],
+        ['height', ['height']],
+        ['view', ['fullscreen', 'codeview']],
+      ],
+    });
+  });
+
+  // 취소 버튼 클릭시 /board로 이동하도록 설정
+  $("#cancelBtn").on("click", function () {
+    window.location.href = "/board";
+  });
+</script>
+</body>
+</html>
