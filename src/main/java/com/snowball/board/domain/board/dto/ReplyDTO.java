@@ -1,14 +1,12 @@
 package com.snowball.board.domain.board.dto;
-
 import lombok.*;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @EqualsAndHashCode
-public class ReplyDTO {
+public class ReplyDto {
 
     private Long id;
     private Long userId;
