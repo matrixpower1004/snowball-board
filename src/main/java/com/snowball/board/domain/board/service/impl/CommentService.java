@@ -1,15 +1,19 @@
 package com.snowball.board.domain.board.service.impl;
 
+import com.snowball.board.common.exception.model.NotFoundException;
 import com.snowball.board.domain.board.dto.CommentDto;
 import com.snowball.board.domain.board.model.Comment;
 import com.snowball.board.domain.board.model.Post;
+import com.snowball.board.domain.board.model.Reply;
 import com.snowball.board.domain.board.repository.CommentRepository;
 import com.snowball.board.domain.board.repository.PostRepository;
+import com.snowball.board.domain.board.repository.ReplyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +22,8 @@ import java.util.stream.Collectors;
 public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final ReplyRepository replyRepository;
+
 
     @Transactional
     public CommentDto createComment(Long postId, String content) {
@@ -49,12 +55,14 @@ public class CommentService {
     }
     @Transactional
     public void deleteComment(Long commentId) {
-        commentRepository.deleteById(commentId);
-    }
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("댓글을 찾을 수 없습니다. ID: " + commentId));
 
-    public List<CommentDto> getAllCommentsByPostId(Long postId) {
-        List<Comment> comments = commentRepository.findAllByPostId(postId);
-        return comments.stream().map(this::mapToDTO).collect(Collectors.toList());
+        List<Reply> replies = comment.getReplies();
+        replyRepository.deleteAllByCommentId(commentId);
+
+
+        commentRepository.delete(comment);
     }
 
     private CommentDto mapToDTO(Comment comment) {
@@ -66,5 +74,17 @@ public class CommentService {
         commentDTO.setCreatedAt(comment.getCreatedAt().toString());
         commentDTO.setUpdatedAt(comment.getUpdatedAt().toString());
         return commentDTO;
+    }
+
+    public List<CommentDto> getAllCommentsByPostId(Long postId) {
+        List<Comment> comments = commentRepository.findAllByPostId(postId);
+        List<CommentDto> commentDtos = new ArrayList<>();
+        for (Comment comment : comments) {
+            CommentDto commentDto = new CommentDto();
+            commentDto.setId(comment.getId());
+            commentDto.setContent(comment.getContent());
+            commentDtos.add(commentDto);
+        }
+        return commentDtos;
     }
 }
