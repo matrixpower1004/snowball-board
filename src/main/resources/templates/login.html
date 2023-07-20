@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="/js/check.js"></script>
+    <script src="/js/login.js"></script>
+</head>
+<body>
+<h2>Login</h2>
+<form id="loginForm">
+    <input type="text" id="userAccount" name="userAccount" placeholder="userAccount" required><br>
+    <input type="password" id="password" name="password" placeholder="Password" required><br>
+    <button type="submit">Login</button>
+</form>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        var form = event.target;
+        var data = {
+            userAccount: form.elements['userAccount'].value,
+            password: form.elements['password'].value
+        };
+
+        fetch('/api/auth/authenticate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(handleLoginResponse)
+            .then(responseData => {
+                if (responseData.access_token) {
+                    const accessToken = responseData.access_token;
+                    if (isValidAccessToken(accessToken)) {
+                        localStorage.setItem('access_token', responseData.access_token);
+                        window.location.href = "/board";
+                    }
+
+                } else {
+                    alert("로그인 실패. 생성된 토큰이 없어용");
+                }
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    });
+
+    function isValidAccessToken(accessToken) {
+        if (!accessToken) {
+            alert("로그인 실패. 생성된 토큰이 없어용")
+            return false; // Access token not exist
+        }
+
+        const tokenParts = accessToken.split('.');
+        if (tokenParts.length !== 3) {
+            alert("로그인 실패. 토큰이 규격이 엉망이에요")
+            return false; // Invalid token format
+        }
+
+        // Split the access token into its three parts: header, payload, and signature
+        const header = tokenParts[0];
+        const payload = tokenParts[1];
+        const signature = tokenParts[2];
+
+        const decodedPayload = JSON.parse(atob(payload));
+        const expirationDate = new Date(decodedPayload.exp * 1000);
+        const now = new Date();
+        if (now >= expirationDate) {
+            alert("로그인 실패. 토큰이 만료됬어요")
+            return false; // Token has expired
+        }
+
+        // token is valid
+        return true;
+    }
+</script>
+</body>
+</html>

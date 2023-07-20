@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <title>Register User</title>
+</head>
+<body>
+<h2>Register User</h2>
+<form id="registerForm">
+  <label for="userAccount">User Account:</label>
+  <input type="text" id="userAccount" name="userAccount" required><br>
+
+  <label for="password">Password:</label>
+  <input type="password" id="password" name="password" required><br>
+
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email" required>
+  <button type="button" id="emailCheckButton">Check Email</button><br>
+
+  <label for="nickName">Nickname:</label>
+  <input type="text" id="nickName" name="nickName" required>
+  <button type="button" id="nickNameCheckButton">Check Nickname</button><br>
+
+  <label for="userName">User Name:</label>
+  <input type="text" id="userName" name="userName" required><br>
+
+  <button type="submit" id="registerButton" disabled>Register</button>
+</form>
+<script>
+  document.getElementById('registerForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+
+    var form = event.target;
+    var data = {
+      userAccount: form.elements['userAccount'].value,
+      password: form.elements['password'].value,
+      email: form.elements['email'].value,
+      nickName: form.elements['nickName'].value,
+      userName: form.elements['userName'].value
+    };
+
+    fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    })
+            .then(handleRegisterResponse)
+            .then(responseData => {
+              if (responseData.access_token) {
+                const accessToken = responseData.access_token;
+                if (isValidAccessToken(accessToken)) {
+                  localStorage.setItem('access_token', responseData.access_token);
+                  window.location.href = "/post";
+                }
+
+              } else {
+                alert("가입 실패. 생성된 토큰이 없어용");
+              }
+
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+  });
+
+  // Add event listeners for email and nickname duplicate check buttons
+  document.getElementById('emailCheckButton').addEventListener('click', function() {
+    const email = document.getElementById('email').value;
+    checkDuplicateEmail(email);
+  });
+
+  document.getElementById('nickNameCheckButton').addEventListener('click', function() {
+    const nickName = document.getElementById('nickName').value;
+    checkDuplicateNickname(nickName);
+  });
+
+  function checkDuplicateEmail(email) {
+    fetch('/api/user/check-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email: email })
+    })
+            .then(handleDuplicatedCheck)
+            .then(responseData => {
+              enableRegisterButtonIfValid();
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+  }
+
+  function checkDuplicateNickname(nickname) {
+    fetch('/api/user/check-nickName', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ nickname: nickname })
+    })
+            .then(handleDuplicatedCheck)
+            .then(responseData => {
+              enableRegisterButtonIfValid();
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+  }
+
+  function enableRegisterButtonIfValid() {
+    const email = document.getElementById('email').value;
+    const nickName = document.getElementById('nickName').value;
+    if (isValidEmail(email) && isValidNickname(nickName)) {
+      document.getElementById('registerButton').removeAttribute('disabled');
+    }
+  }
+
+  function isValidEmail(email) {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email) && email.length >= 1 && email.length <= 30;
+  }
+
+  function isValidNickname(nickname) {
+    const nicknameRegex = /^[a-zA-Z0-9가-힣\s]+$/;
+    return nicknameRegex.test(nickname) && nickname.length >= 1 && nickname.length <= 10;
+  }
+
+  function handleDuplicatedCheck(response) {
+    if (response.ok) {
+      // If the response status code is 2xx (success), continue with the registration process
+      enableRegisterButtonIfValid()
+    } else {
+      // If the response status code is not 2xx (error), handle the error
+      if (response.status === 409) {
+        alert("이미 존재합니다");
+      } else {
+        alert("가입에 실패하였습니다.");
+      }
+      throw new Error("duplicate check failed.");
+    }
+  }
+
+  function handleRegisterResponse(response) {
+    if (response.ok) {
+      // If the response status code is 2xx (success), continue with the registration process
+      return response.json();
+    } else {
+      // If the response status code is not 2xx (error), handle the error
+      if (response.status === 401) {
+        alert("가입 실패. 정보를 확인해주세요.");
+      } else {
+        alert("가입에 실패하였습니다.");
+      }
+      throw new Error("Registration failed.");
+    }
+  }
+
+  function isValidAccessToken(accessToken) {
+    if (!accessToken) {
+      alert("로그인 실패. 생성된 토큰이 없어용")
+      return false; // Access token not exist
+    }
+
+    const tokenParts = accessToken.split('.');
+    if (tokenParts.length !== 3) {
+      alert("로그인 실패. 토큰이 규격이 엉망이에요")
+      return false; // Invalid token format
+    }
+
+    // Split the access token into its three parts: header, payload, and signature
+    const header = tokenParts[0];
+    const payload = tokenParts[1];
+    const signature = tokenParts[2];
+
+    const decodedPayload = JSON.parse(atob(payload));
+    const expirationDate = new Date(decodedPayload.exp * 1000);
+    const now = new Date();
+    if (now >= expirationDate) {
+      alert("로그인 실패. 토큰이 만료됬어요")
+      return false; // Token has expired
+    }
+
+    // token is valid
+    return true;
+  }
+</script>
+</body>
+</html>
