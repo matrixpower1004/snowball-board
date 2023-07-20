@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h1>수정 페이지</h1>
+<form>
+  <input type="hidden" id="id" value="${post.id}"/>
+  <label htmlFor="title">Title:</label><br/>
+  <input type="text" id="title" value="${post.title}"/><br/>
+  <label htmlFor="content">Content:</label><br/>
+  <textarea id="content">${post.content}</textarea><br/><br/>
+  <button type="button" onClick="updatePost(${post.id})">완료</button>
+</form>
+</body>
+<head>
+  <title>Edit Post</title>
+  <script>
+    function updatePost(postId) {
+      var title = document.getElementById('title').value;
+      var content = document.getElementById('content').value;
+
+      var xhr = new XMLHttpRequest();
+      xhr.open('PUT', '/board/edit/' + postId);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = function () {
+        if (xhr.status === 200) {
+          console.log('Post updated successfully');
+          window.location.href = '/board';  // 리스트 페이지로 이동
+        } else {
+          console.error('Failed to update post');
+        }
+      };
+      xhr.send(JSON.stringify({title: title, content: content}));
+    }
+  </script>
+</head>
+</html>

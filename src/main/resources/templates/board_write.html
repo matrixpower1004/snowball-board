@@ -42,11 +42,46 @@
         ['view', ['fullscreen', 'codeview']],
       ],
     });
-  });
 
-  // 취소 버튼 클릭시 /board로 이동하도록 설정
-  $("#cancelBtn").on("click", function () {
-    window.location.href = "/board";
+    // 폼 제출 시 동작 설정
+    $('#postForm').submit(function(event) {
+      event.preventDefault(); // 기본 폼 제출 동작 방지
+
+      // 제목과 내용 필드가 비어 있지 않은지 확인
+      var title = $('#title').val();
+      var content = $('.summernote').summernote('code');
+      if (!title || !content) {
+        alert("제목과 내용을 모두 입력해주세요.");
+        return;
+      }
+
+      // 폼 데이터 가져오기
+      var formData = {
+        title: $('#title').val(),
+        content: $('.summernote').summernote('code'),
+        // user_id: userId // 이 부분을 추가합니다. 이곳에 실제 로그인한 사용자의 ID를 설정하면 됩니다.
+      };
+
+      // Ajax 요청으로 게시물 등록
+      $.ajax({
+        type: 'POST',
+        url: '/api/posts',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+          // 등록이 성공하면 리스트 페이지로 이동
+          window.location.href = "/board";
+        },
+        error: function(xhr, status, error) {
+          console.log(xhr.responseText);
+        }
+      });
+    });
+
+    // 취소 버튼 클릭시 /board로 이동하도록 설정
+    $("#cancelBtn").on("click", function () {
+      window.location.href = "/board";
+    });
   });
 </script>
 </body>
