@@ -30,18 +30,21 @@ public class AuthorizationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        if (request.getServletPath().contains("/api/auth") || request.getServletPath().contains("/login") || request.getServletPath().contains("/register") || request.getServletPath().contains("/resources") || request.getServletPath().contains("/api/user/check-email") || request.getServletPath().contains("/api/user/check-nickName")) {
+        if (request.getServletPath().contains("/api/auth") || request.getServletPath().contains("/login") || request.getServletPath().contains("/register") || request.getServletPath().contains("/resources") || request.getServletPath().contains("/api/user/check-email") || request.getServletPath().contains("/api/user/check-nickName") || request.getServletPath().contains("/h2-console") || request.getServletPath().contains("/board")) {
             filterChain.doFilter(request, response);
             return;
         }
+
         final String authHeader = request.getHeader("Authorization");
         final String accessToken;
         final String userAccount;
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(SC_BAD_REQUEST);
             response.setContentType(APPLICATION_JSON_VALUE);
@@ -51,12 +54,16 @@ public class AuthorizationFilter extends OncePerRequestFilter {
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .build();
             new ObjectMapper().writeValue(response.getWriter(), errorResponse);
+            return;
         }
-        //"Bearer " -> 6 length
+
+        //"Bearer " -> 7 length
         accessToken = authHeader.substring(7);
         userAccount = jwtService.extractUserAccount(accessToken);
+
         if (userAccount != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userAccount);
+
             if (jwtService.isTokenValid(accessToken, userDetails)) {
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
@@ -74,11 +81,10 @@ public class AuthorizationFilter extends OncePerRequestFilter {
                 response.setCharacterEncoding("utf-8");
                 ExceptionDto errorResponse = ExceptionDto.builder()
                         .message(AuthExceptionMessage.FAIL_TOKEN_CHECK.message())
-                        .statusCode(HttpStatus.BAD_REQUEST.value())
+                        .statusCode(HttpStatus.UNAUTHORIZED.value())
                         .build();
                 new ObjectMapper().writeValue(response.getWriter(), errorResponse);
             }
-
         }
     }
 }
