@@ -1,13 +1,12 @@
 package com.snowball.board.domain.user.api;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.snowball.board.common.util.ApiResponse;
 import com.snowball.board.domain.user.dto.UpdateInfoRequest;
 import com.snowball.board.domain.user.dto.UpdatePasswordRequest;
 import com.snowball.board.domain.user.dto.ValidateEmailDuplicateRequest;
 import com.snowball.board.domain.user.dto.ValidateNickNameDuplicateRequest;
 import com.snowball.board.domain.user.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,33 +22,32 @@ public class UserApiController {
     // TODO: 2023-07-19 api for check duplicate email 
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse> getUserInfo(@PathVariable Long id) throws JsonProcessingException {
-
-        return ResponseEntity.ok(userService.getUserInfo(id));
+    public ResponseEntity<?> getUserInfo(@PathVariable Long id) {
+        return new ResponseEntity<>(userService.getUserInfo(id), HttpStatus.OK);
     }
 
     @PostMapping("/check-nickName")
-    public ResponseEntity<ApiResponse> validateNickNameDuplicate(@RequestBody @Valid ValidateNickNameDuplicateRequest validateNickNameDuplicateRequest) {
+    public ResponseEntity<?> validateNickNameDuplicate(@RequestBody @Valid ValidateNickNameDuplicateRequest validateNickNameDuplicateRequest) {
 
-        return ResponseEntity.ok(userService.validateDuplicateNickName(validateNickNameDuplicateRequest));
+        return new ResponseEntity<>(userService.validateDuplicateNickName(validateNickNameDuplicateRequest), HttpStatus.OK);
     }
 
     @PostMapping("/check-email")
-    public ResponseEntity<ApiResponse> validateEmailDuplicate(@RequestBody @Valid ValidateEmailDuplicateRequest validateEmailDuplicateRequest) {
+    public ResponseEntity<?> validateEmailDuplicate(@RequestBody @Valid ValidateEmailDuplicateRequest validateEmailDuplicateRequest) {
 
-        return ResponseEntity.ok(userService.validateDuplicateEmail(validateEmailDuplicateRequest));
+        return new ResponseEntity<>(userService.validateDuplicateEmail(validateEmailDuplicateRequest), HttpStatus.OK);
     }
 
     @PatchMapping("/{id}/password")
-    public ResponseEntity<ApiResponse> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest, @PathVariable Long id) {
+    public ResponseEntity<?> updatePassword(@RequestBody @Valid UpdatePasswordRequest updatePasswordRequest, @PathVariable Long id) {
 
-        return ResponseEntity.ok(userService.updatePassword(id, updatePasswordRequest));
+        return new ResponseEntity<>(userService.updatePassword(id, updatePasswordRequest), HttpStatus.OK);
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse> updateUserInfo(@RequestBody @Valid UpdateInfoRequest updateInfoRequest, @PathVariable Long id) throws JsonProcessingException {
+    public ResponseEntity<?> updateUserInfo(@RequestBody @Valid UpdateInfoRequest updateInfoRequest, @PathVariable Long id) {
 
-        return ResponseEntity.ok(userService.updateUserInfo(id, updateInfoRequest));
+        return new ResponseEntity<>(userService.updateUserInfo(id, updateInfoRequest), HttpStatus.OK);
     }
 
 }
