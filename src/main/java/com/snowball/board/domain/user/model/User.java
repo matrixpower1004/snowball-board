@@ -71,6 +71,10 @@ public class User implements UserDetails {
         this.password = password;
     }
 
+    public void updateUserRole(UserRole userRole) {
+        this.userRole = userRole;
+    }
+
     @OneToMany(mappedBy = "user")
     public List<Token> tokens;
 
