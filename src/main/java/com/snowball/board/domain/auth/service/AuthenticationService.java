@@ -1,7 +1,9 @@
 package com.snowball.board.domain.auth.service;
 
 import com.snowball.board.common.exception.message.AuthExceptionMessage;
+import com.snowball.board.common.exception.message.ExceptionMessage;
 import com.snowball.board.common.exception.model.UnauthorizedException;
+import com.snowball.board.common.util.UserRole;
 import com.snowball.board.config.JwtService;
 import com.snowball.board.domain.auth.dto.AuthenticationRequest;
 import com.snowball.board.domain.auth.dto.AuthenticationResponse;
@@ -18,10 +20,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.security.sasl.AuthenticationException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,6 +49,10 @@ public class AuthenticationService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())
                 .nickName(request.getNickName())
+                .createdAt(new Timestamp(System.currentTimeMillis()))
+                .updatedAt(new Timestamp(System.currentTimeMillis()))
+                .userRole(UserRole.BEGINNER)
+                .userStatus(true)
                 .build();
         validateUserAccountDuplicate(user.getUserAccount());
         userRepository.save(user);
@@ -68,7 +73,7 @@ public class AuthenticationService {
     private void validateUserAccountDuplicate(String userAccount){
         Optional<User> findUser = userRepository.findByUserAccount(userAccount);
         if (findUser.isPresent()) {
-            throw new IllegalStateException("이미 존재하는 아이디 입니다.");
+            throw new IllegalStateException(ExceptionMessage.ALREADY_EXISTS_USER.message());
         }
     }
 
@@ -86,7 +91,7 @@ public class AuthenticationService {
                         request.getPassword()
                 )
         );
-        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow();
+        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow((() -> new IllegalStateException(AuthExceptionMessage.USER_NOT_FOUND.message())));
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
         revokeAllUserTokens(user);
@@ -103,8 +108,7 @@ public class AuthenticationService {
      * @return LogoutResponse
      */
     public LogoutResponse logout(AuthenticationRequest request) {
-        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow();
-        revokeAllUserTokens(user);
+        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow((() -> new IllegalStateException(AuthExceptionMessage.USER_NOT_FOUND.message())));        revokeAllUserTokens(user);
         return LogoutResponse.builder()
                 .message("성공적으로 로그아웃 되었습니다.")
                 .build();
@@ -138,7 +142,7 @@ public class AuthenticationService {
         tokenRepository.saveAll(validTokens);
     }
 
-    public AuthenticationResponse refreshAccessToken(HttpServletRequest request) throws IOException {
+    public AuthenticationResponse refreshAccessToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         System.out.println(cookies);
         String refreshToken = null;
@@ -165,12 +169,8 @@ public class AuthenticationService {
                         .build();
             }
         }
-        throw new AuthenticationException(AuthExceptionMessage.FAIL_TOKEN_CHECK.message());
+        throw new UnauthorizedException(AuthExceptionMessage.FAIL_TOKEN_CHECK.message());
 
-    }
-
-    public String generateCookie(String token) {
-        return jwtService.generateCookie(token).toString();
     }
 
 }

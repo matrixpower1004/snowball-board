@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<h2>Update User Profile</h2>
+<form id="updateForm" th:object="${user}" th:action="@{/api/user/{id}(id=${user.id})}" method="post">
+    <!-- Hidden input field to store the user ID -->
+    <input type="hidden" th:field="*{id}" th:value="${user.id}" />
+
+    <!-- Your form fields for email and nickname -->
+    <input type="text" th:field="*{email}" />
+    <input type="text" th:field="*{nickName}" />
+
+    <!-- Password change section -->
+    <h3>Change Password</h3>
+    <input type="password" id="currentPassword" placeholder="Current Password">
+    <input type="password" id="newPassword" placeholder="New Password">
+    <input type="password" id="confirmPassword" placeholder="Confirm New Password">
+
+    <button type="submit" id="updateButton">Update Profile</button>
+</form>
+
+<!-- Include the profile.js script at the bottom -->
+<script src="/js/profile.js"></script>
+</body>
+</html>

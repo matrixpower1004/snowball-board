@@ -1,9 +1,6 @@
 package com.snowball.board.domain.user.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.snowball.board.common.exception.message.ExceptionMessage;
-import com.snowball.board.common.util.ApiResponse;
 import com.snowball.board.domain.user.dto.*;
 import com.snowball.board.domain.user.model.User;
 import com.snowball.board.domain.user.repository.UserRepository;
@@ -22,20 +19,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public ApiResponse validateDuplicateNickName(ValidateNickNameDuplicateRequest validateNickNameDuplicateRequest) {
+    public String validateDuplicateNickName(ValidateNickNameDuplicateRequest validateNickNameDuplicateRequest) {
         validateDuplicateNickName(validateNickNameDuplicateRequest.getNickName());
 
-        return ApiResponse.builder()
-                .message("사용 가능")
-                .build();
+        return "사용 가능";
     }
 
-    public ApiResponse validateDuplicateEmail(ValidateEmailDuplicateRequest validateEmailDuplicateRequest) {
+    public String validateDuplicateEmail(ValidateEmailDuplicateRequest validateEmailDuplicateRequest) {
         validateDuplicateEmail(validateEmailDuplicateRequest.getEmail());
 
-        return ApiResponse.builder()
-                .message("사용 가능")
-                .build();
+        return "사용 가능";
     }
 
     private void validateDuplicateNickName(String nickName) {
@@ -45,6 +38,7 @@ public class UserService {
         }
     }
 
+    // TODO: 2023-07-20 email 
     private void validateDuplicateEmail(String email) {
         Optional<User> findUser = userRepository.findByNickName(email);
         if (findUser.isPresent()) {
@@ -52,28 +46,24 @@ public class UserService {
         }
     }
 
-    public ApiResponse getUserInfo(Long id) throws JsonProcessingException {
+    public GetInfoResponse getUserInfo(Long id) {
         Optional<User> findUser = userRepository.findById(id);
         if (findUser.isEmpty()) {
             throw new IllegalStateException(ExceptionMessage.USER_NOT_FOUND.message());
         }
 
         User user = findUser.get();
-        GetInfoResponse getInfoResponse = GetInfoResponse.builder()
+        return GetInfoResponse.builder()
                 .userName(user.getUsername())
                 .email(user.getEmail())
                 .nickName(user.getNickName())
                 .userRole(user.getUserRole())
                 .createdAt(user.getCreatedAt())
                 .build();
-
-        return ApiResponse.builder()
-                .data(new ObjectMapper().writeValueAsString(getInfoResponse))
-                .build();
     }
     // Update -> @Transactional(readOnly = false)
     @Transactional
-    public ApiResponse updateUserInfo(Long id, UpdateInfoRequest updateInfoRequest) throws JsonProcessingException {
+    public UpdateInfoResponse updateUserInfo(Long id, UpdateInfoRequest updateInfoRequest) {
         Optional<User> findUser = userRepository.findById(id);
         if (findUser.isEmpty()) {
             throw new IllegalStateException(ExceptionMessage.USER_NOT_FOUND.message());
@@ -91,18 +81,14 @@ public class UserService {
             user.updateNickName(nickName);
         }
 
-        UpdateInfoResponse updateInfoResponse = UpdateInfoResponse.builder()
+        return UpdateInfoResponse.builder()
                 .email(user.getEmail())
                 .nickName(user.getNickName())
-                .build();
-
-        return ApiResponse.builder()
-                .data(new ObjectMapper().writeValueAsString(updateInfoResponse))
                 .build();
     }
 
     @Transactional
-    public ApiResponse updatePassword(Long id, UpdatePasswordRequest updatePasswordRequest) {
+    public String updatePassword(Long id, UpdatePasswordRequest updatePasswordRequest) {
         Optional<User> findUser = userRepository.findById(id);
         if (findUser.isEmpty()) {
             throw new IllegalStateException(ExceptionMessage.USER_NOT_FOUND.message());
@@ -110,8 +96,7 @@ public class UserService {
         User user = findUser.get();
         user.updatePassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
 
-        return ApiResponse.builder()
-                .message("비밀번호가 성공적으로 수정되었습니다.")
-                .build();
+        return "비밀번호가 성공적으로 수정되었습니다.";
     }
+
 }

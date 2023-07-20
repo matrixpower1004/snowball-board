@@ -1,21 +1,17 @@
 package com.snowball.board.domain.auth.api;
 
-import com.snowball.board.config.JwtService;
 import com.snowball.board.domain.auth.dto.AuthenticationRequest;
 import com.snowball.board.domain.auth.dto.AuthenticationResponse;
-import com.snowball.board.domain.auth.dto.LogoutResponse;
 import com.snowball.board.domain.auth.service.AuthenticationService;
 import com.snowball.board.domain.user.dto.RegisterRequest;
-import com.snowball.board.domain.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.io.IOException;
 
@@ -24,40 +20,47 @@ import java.io.IOException;
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
-    private final JwtService jwtService;
 
     @Autowired
-    public AuthenticationController(AuthenticationService authenticationService, UserService userService, JwtService jwtService) {
+    public AuthenticationController(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
-        this.jwtService = jwtService;
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<AuthenticationResponse> authenticate(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
-        AuthenticationResponse response = authenticationService.authenticate(authenticationRequest);
-        response.setRefreshToken(null);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, authenticationService.generateCookie(response.getRefreshToken()))
-                .body(response);
+    public ResponseEntity<?> authenticate(@RequestBody @Valid AuthenticationRequest authenticationRequest, HttpServletResponse response) {
+        AuthenticationResponse authenticationResponse = authenticationService.authenticate(authenticationRequest);
+        response.addCookie(generateHttponlyCookie(authenticationResponse.getRefreshToken()));
+        //set refresh token null to response, only set in httpOnly secure cookie
+        authenticationResponse.setRefreshToken(null);
+        return new ResponseEntity<>(authenticationResponse, HttpStatus.OK);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<AuthenticationResponse> register(@RequestBody @Valid RegisterRequest userRegisterRequest) {
-        AuthenticationResponse response = authenticationService.register(userRegisterRequest);
-        //response.setRefreshToken(null);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, authenticationService.generateCookie(response.getRefreshToken()))
-                .body(response);
+    public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest userRegisterRequest, HttpServletResponse response) {
+        AuthenticationResponse authenticationResponse = authenticationService.register(userRegisterRequest);
+        response.addCookie(generateHttponlyCookie(authenticationResponse.getRefreshToken()));
+        //set refresh token null to response, only set in httpOnly secure cookie
+        authenticationResponse.setRefreshToken(null);
+        return new ResponseEntity<>(authenticationResponse, HttpStatus.OK);
     }
 
+    // Use HttpOnly Secure Cookie to refresh token
     @PostMapping("/refresh-token")
-    public ResponseEntity<AuthenticationResponse> refreshToken(HttpServletRequest request) throws IOException {
-        return ResponseEntity.ok(authenticationService.refreshAccessToken(request));
+    public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token") HttpServletRequest request) throws IOException {
+
+        return new ResponseEntity<>(authenticationService.refreshAccessToken(request), HttpStatus.OK);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponse> logout(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
-        return ResponseEntity.ok(authenticationService.logout(authenticationRequest));
+    public ResponseEntity<?> logout(@RequestBody @Valid AuthenticationRequest authenticationRequest) {
+        return new ResponseEntity<>(authenticationService.logout(authenticationRequest), HttpStatus.OK);
     }
 
+    private Cookie generateHttponlyCookie(String refreshToken) {
+        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        return cookie;
+    }
 }
