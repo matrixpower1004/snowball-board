@@ -35,7 +35,7 @@ public class AuthorizationFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        if (request.getServletPath().contains("/api/auth")) {
+        if (request.getServletPath().contains("/api/auth") || request.getServletPath().contains("/login") || request.getServletPath().contains("/register") || request.getServletPath().contains("/resources") || request.getServletPath().contains("/api/user/check-email") || request.getServletPath().contains("/api/user/check-nickName")) {
             filterChain.doFilter(request, response);
             return;
         }
