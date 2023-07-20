@@ -8,7 +8,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -31,11 +30,15 @@ public class SecurityConfiguration {
                 // 제한 없이 접근 가능, 전역설정
                 .antMatchers(
                         "/login",
+                        "/resources/static/js/**",
+                        "/resources/**",
+                        "/h2-console/**",
+                        "/templates/**",
                         "/register",
-                        "/api/user/longin",
-                        "/api/user/register",
                         "/api/user/check-nickName",
-                        "/api/auth/**",
+                        "/api/user/check-email",
+                        "/api/auth/authenticate",
+                        "/api/auth/register",
                         "/**"
                 ).permitAll()
                 // TODO: 2023-07-17 uncomment after jwtSetting 
@@ -59,7 +62,7 @@ public class SecurityConfiguration {
 
                 // DELTE 게시글 및 댓글 관련 기능 엑세스 권한 (게시글 및 댓글 삭제)
                 .antMatchers(DELETE, "/api/posts/{postId}").hasAnyRole(UserRole.ADMIN.name(), UserRole.BEGINNER.name(), UserRole.EXPERT.name())
-                .antMatchers(DELETE, "/api/comments/{comentId}").hasAnyRole(UserRole.ADMIN.name(), UserRole.BEGINNER.name(), UserRole.EXPERT.name())
+                .antMatchers(DELETE, "/api/comments/{commentId}").hasAnyRole(UserRole.ADMIN.name(), UserRole.BEGINNER.name(), UserRole.EXPERT.name())
 
                 // PUT 게시글 및 댓글 관련 엑세스 권한 (게시글 및 댓글 수정)
                 .antMatchers(PUT, "/api/posts/{postId}").hasAnyRole(UserRole.ADMIN.name(), UserRole.BEGINNER.name(), UserRole.EXPERT.name())
@@ -73,11 +76,12 @@ public class SecurityConfiguration {
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .logout()
-                .logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
+                .formLogin().loginPage("/login")
+                .and()
+                .logout().logoutSuccessUrl("/login")
+                //.logoutSuccessHandler((request, response, authentication) -> SecurityContextHolder.clearContext())
                 //.logoutUrl()
                 //.logoutHandler()
-                //.formLogin().disable();
                 .and()
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
