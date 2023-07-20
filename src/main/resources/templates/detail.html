@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>게시글 상세보기</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script th:src="@{/js/post.js}"></script>
+</head>
+<body>
+<div id="postDetail">
+  <h1 th:text="${post.title}"></h1>
+  <p th:text="${post.content}"></p>
+  <ul id="commentList">
+    <li th:each="comment : ${post.comments}">
+      <p th:text="${comment.content}"></p>
+      <button type="button" class="deleteCommentButton" data-comment-id="${comment.id}">댓글 삭제</button>
+      <ul id="replyList">
+        <li th:each="reply : ${comment.replies}">
+          <p th:text="${reply.content}"></p>
+          <button type="button" class="deleteReplyButton" data-reply-id="${reply.id}">대댓글 삭제</button>
+        </li>
+      </ul>
+      <form class="createReplyForm" th:action="@{/posts/{postId}/comments/{commentId}/replies(postId=${post.id}, commentId=${comment.id})}" method="post">
+        <textarea name="content" placeholder="대댓글 내용" maxlength="50"></textarea>
+        <button type="submit">대댓글 작성</button>
+      </form>
+    </li>
+  </ul>
+  <form id="createCommentForm" th:action="@{/posts/{postId}/comments(postId=${post.id})}" method="post">
+    <textarea name="content" placeholder="댓글 내용" maxlength="50"></textarea>
+    <button type="submit">댓글 작성</button>
+  </form>
+</div>
+
+<a th:href="@{/posts}">목록으로</a>
+
+<script>
+  $(document).ready(function() {
+    // CSRF 토큰 가져오기
+    var csrfToken = $("meta[name='_csrf']").attr("content");
+
+    // CSRF 헤더 이름 가져오기
+    var csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+    // AJAX 요청 전 헤더에 CSRF 토큰 추가
+    $.ajaxSetup({
+      beforeSend: function(xhr) {
+        if (csrfHeader && csrfToken) {
+          xhr.setRequestHeader(csrfHeader, csrfToken);
+        }
+      }
+    });
+
+    // 댓글 작성 AJAX
+    $('#createCommentForm').submit(function(e) {
+      e.preventDefault();
+      var postId = $(this).attr('action').split('/')[2];
+      var content = $('textarea[name="content"]').val();
+
+      $.ajax({
+        url: '/posts/' + postId + '/comments',
+        type: 'post',
+        data: { content: content },
+        success: function(response) {
+          var newComment = '<li>' +
+                  '<p>' + response.content + '</p>' +
+                  '<button type="button" class="deleteCommentButton" data-comment-id="' + response.id + '">댓글 삭제</button>' +
+                  '<ul id="replyList"></ul>' +
+                  '<form class="createReplyForm" th:action="@{/posts/{postId}/comments/{commentId}/replies(postId=${post.id}, commentId=${comment.id})}" method="post">' +
+                  '<textarea name="content" placeholder="대댓글 내용" maxlength="50"></textarea>' +
+                  '<button type="submit">대댓글 작성</button>' +
+                  '</form>' +
+                  '</li>';
+
+          $('#commentList').append(newComment);
+          $('textarea[name="content"]').val('');
+        }
+      });
+    });
+
+    // 대댓글 작성 AJAX
+    $(document).on('submit', '.createReplyForm', function(e) {
+      e.preventDefault();
+      var postId = $(this).attr('action').split('/')[2];
+      var commentId = $(this).attr('action').split('/')[4];
+      var content = $(this).find('textarea[name="content"]').val();
+
+      $.ajax({
+        url: '/posts/' + postId + '/comments/' + commentId + '/replies',
+        type: 'post',
+        data: { content: content },
+        success: function(response) {
+          var newReply = '<li>' +
+                  '<p>' + response.content + '</p>' +
+                  '<button type="button" class="deleteReplyButton" data-reply-id="' + response.id + '">대댓글 삭제</button>' +
+                  '</li>';
+
+          $(this).siblings('#replyList').append(newReply);
+          $(this).find('textarea[name="content"]').val('');
+        }
+      });
+    });
+
+    // 댓글 삭제 AJAX
+    $(document).on('click', '.deleteCommentButton', function() {
+      var commentId = $(this).data('comment-id');
+
+      $.ajax({
+        url: '/comments/' + commentId,
+        type: 'delete',
+        success: function() {
+          $(this).closest('li').remove();
+        }.bind(this)
+      });
+    });
+
+    // 대댓글 삭제 AJAX
+    $(document).on('click', '.deleteReplyButton', function() {
+      var replyId = $(this).data('reply-id');
+
+      $.ajax({
+        url: '/replies/' + replyId,
+        type: 'delete',
+        success: function() {
+          $(this).closest('li').remove();
+        }.bind(this)
+      });
+    });
+  });
+</script>
+</body>
+</html>

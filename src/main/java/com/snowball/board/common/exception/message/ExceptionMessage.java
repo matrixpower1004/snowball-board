@@ -7,7 +7,6 @@ public enum ExceptionMessage {
     ALREADY_EXISTS_USER("이미 존재하는 유저입니다."),
     DUPLICATE_NICKNAME("해당 닉네임은 이미 사용 중입니다."),
     DUPLICATE_EMAIL("해당 닉네임은 이미 사용 중입니다.");
-    DUPLICATE_NICKNAME("해당 닉네임은 이미 사용 중입니다.");
     private final String message;
 
     ExceptionMessage(String message) {

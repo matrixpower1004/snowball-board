@@ -3,9 +3,10 @@ package com.snowball.board.domain.board.service;
 import com.snowball.board.domain.board.dto.ReplyDTO;
 import com.snowball.board.domain.board.emtity.Comment;
 import com.snowball.board.domain.board.emtity.Reply;
-import com.snowball.board.domain.board.emtity.User;
 import com.snowball.board.domain.board.repository.CommentRepository;
 import com.snowball.board.domain.board.repository.ReplyRepository;
+import com.snowball.board.domain.user.model.User;
+import com.snowball.board.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +19,12 @@ public class ReplyService {
 
     private final ReplyRepository replyRepository;
     private final CommentRepository commentRepository;
+    private final UserRepository userRepository;
 
-    public ReplyService(ReplyRepository replyRepository, CommentRepository commentRepository) {
+    public ReplyService(ReplyRepository replyRepository, CommentRepository commentRepository, UserRepository userRepository) {
         this.replyRepository = replyRepository;
         this.commentRepository = commentRepository;
+        this.userRepository = userRepository;
     }
 
     @Transactional
@@ -33,8 +36,10 @@ public class ReplyService {
             return null;
         }
 
-        User user = new User();
-        user.setId(userId);
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return null;
+        }
 
         Reply reply = new Reply();
         reply.setComment(comment);

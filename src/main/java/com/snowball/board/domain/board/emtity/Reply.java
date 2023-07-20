@@ -1,5 +1,6 @@
 package com.snowball.board.domain.board.emtity;
 
+import com.snowball.board.domain.user.model.User;
 import lombok.*;
 
 import javax.persistence.*;

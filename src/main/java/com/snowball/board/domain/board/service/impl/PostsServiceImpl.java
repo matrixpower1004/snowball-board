@@ -1,11 +1,11 @@
 package com.snowball.board.domain.board.service.impl;
 
 import com.snowball.board.domain.board.model.Post;
-import com.snowball.board.domain.board.repository.PostsRepository;
-import com.snowball.board.domain.board.repository.UserRepository;
 import com.snowball.board.domain.board.dto.PostsDto;
+import com.snowball.board.domain.board.repository.PostsRepository;
 import com.snowball.board.domain.board.service.PostsService;
 import com.snowball.board.domain.mapper.PostsMapper;
+import com.snowball.board.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +23,14 @@ public class PostsServiceImpl implements PostsService {
     public List<PostsDto> getAllPosts() {
         List<Post> posts = postsRepository.findAll();
         return posts.stream()
-                    .map(postsMapper::mapToDto)
-                    .collect(Collectors.toList());
+                .map(postsMapper::mapToDto)
+                .collect(Collectors.toList());
     }
 
     @Override
     public PostsDto getPostById(Long postId) {
         Post post = postsRepository.findById(postId)
-                                   .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다. ID: " + postId));
+                .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다. ID: " + postId));
         return postsMapper.mapToDto(post);
     }
 
@@ -45,7 +45,12 @@ public class PostsServiceImpl implements PostsService {
     public PostsDto updatePost(Long postId, PostsDto postDto) {
         Post existingPost = postsRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("게시물을 찾을 수 없습니다. ID: " + postId));
-        updatePostFromDto(postDto, existingPost);
+
+        // 나머지 필드 업데이트
+        existingPost.setTitle(postDto.getTitle());
+        existingPost.setContent(postDto.getContent());
+        existingPost.setBlindState(postDto.isBlindState());
+
         Post updatedPost = postsRepository.save(existingPost);
         return postsMapper.mapToDto(updatedPost);
     }
@@ -57,12 +62,4 @@ public class PostsServiceImpl implements PostsService {
         }
         postsRepository.deleteById(postId);
     }
-
-    private void updatePostFromDto(PostsDto postDto, Post post) {
-        post.setUserId(postDto.getUserId());
-        post.setTitle(postDto.getTitle());
-        post.setContent(postDto.getContent());
-        post.setBlindState(postDto.isBlindState());
-    }
-
 }

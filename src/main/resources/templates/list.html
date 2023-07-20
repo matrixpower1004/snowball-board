@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+  <title>게시판</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script th:src="@{/js/post.js}"></script>
+  <style>
+    .post-content {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  </style>
+</head>
+<body>
+<h1>게시판</h1>
+
+<ul id="postList">
+  <li th:each="post : ${posts}">
+    <h2 th:text="${post.title}"></h2>
+    <p th:text="${post.content}"></p>
+    <form id="deleteForm" th:action="@{/posts/{postId}/delete(postId=${post.id})}" method="post">
+      <input type="hidden" name="_method" value="delete" />
+      <button type="submit" class="deleteButton" data-post-id="${post.id}">삭제</button>
+    </form>
+    <button type="button" class="editButton" data-post-id="${post.id}">수정</button>
+    <a th:href="@{/posts/{postId}(postId=${post.id})}">상세보기</a>
+  </li>
+</ul>
+
+<form id="createForm" th:action="@{/posts}" method="post">
+  <input type="hidden" name="user_id" th:value="${user_id}" />
+  <input type="hidden" name="blind_state" th:value="${blind_state}" />
+  <input type="text" name="title" placeholder="제목" />
+  <textarea name="content" placeholder="내용"></textarea>
+  <button type="submit" id="createButton">생성</button>
+</form>
+<form id="searchForm">
+  <input type="text" id="searchInput" placeholder="검색어를 입력하세요" />
+  <button type="submit">검색</button>
+</form>
+
+<script>
+  $(document).ready(function() {
+    // 게시물 생성 AJAX
+    $('#createButton').click(function() {
+      var title = $('input[name="title"]').val();
+      var content = $('textarea[name="content"]').val();
+
+      $.ajax({
+        url: '/posts',
+        type: 'post',
+        data: { title: title, content: content },
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="_csrf"]').attr('content'));
+        },
+        success: function(response) {
+          // 생성 성공 시, 새로운 게시물을 목록에 추가
+          var newPost = '<li>' +
+                  '<h2>' + response.title + '</h2>' +
+                  '<p>' + response.content + '</p>' +
+                  '<form id="deleteForm" th:action="@{/posts/{postId}/delete(postId=${post.id})}" method="post">' +
+                  '<input type="hidden" name="_method" value="delete" />' +
+                  '<button type="submit" class="deleteButton" data-post-id="' + response.id + '">삭제</button>' +
+                  '</form>' +
+                  '</li>';
+
+          $('#postList').append(newPost);
+
+          // 입력 필드 초기화
+          $('input[name="title"]').val('');
+          $('textarea[name="content"]').val('');
+        }
+      });
+    });
+
+    // 게시물 삭제 AJAX
+    $(document).on('click', '.deleteButton', function() {
+      var postId = $(this).data('post-id');
+
+      $.ajax({
+        url: '/posts/' + postId + '/delete',
+        type: 'post',
+        data: { _method: 'delete' },
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="_csrf"]').attr('content'));
+        },
+        success: function(response) {
+          // 삭제 성공 시, 해당 게시물을 목록에서 제거
+          $(this).closest('li').remove();
+        }.bind(this)
+      });
+    });
+
+    // 게시물 수정 AJAX
+    $(document).on('click', '.editButton', function() {
+      var postId = $(this).data('post-id');
+      var title = $('input[name="title"]').val();
+      var content = $('textarea[name="content"]').val();
+
+      $.ajax({
+        url: '/posts/' + postId + '/edit',
+        type: 'post',
+        data: { title: title, content: content },
+        beforeSend: function(xhr) {
+          xhr.setRequestHeader('X-CSRF-TOKEN', $('meta[name="_csrf"]').attr('content'));
+        },
+        success: function(response) {
+          // 수정 성공 시, 해당 게시물을 목록에서 갱신
+          var editedPost = '<h2>' + response.title + '</h2>' +
+                  '<p>' + response.content + '</p>' +
+                  '<form id="deleteForm" th:action="@{/posts/{postId}/delete(postId=${post.id})}" method="post">' +
+                  '<input type="hidden" name="_method" value="delete" />' +
+                  '<button type="submit" class="deleteButton" data-post-id="' + response.id + '">삭제</button>' +
+                  '</form>' +
+                  '</li>';
+
+          $(this).closest('li').html(editedPost);
+        }.bind(this)
+      });
+    });
+
+    // 게시물 검색 AJAX
+    $('#searchForm').submit(function(e) {
+      e.preventDefault();
+
+      var query = $('#searchInput').val();
+
+      $.ajax({
+        url: '/posts?search=' + query,
+        type: 'get',
+        success: function(response) {
+          // 검색 결과 처리
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

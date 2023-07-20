@@ -2,7 +2,7 @@ package com.snowball.board.domain.board.service;
 
 import com.snowball.board.domain.board.dto.CommentDTO;
 import com.snowball.board.domain.board.emtity.Comment;
-import com.snowball.board.domain.board.emtity.Post;
+import com.snowball.board.domain.board.model.Post;
 import com.snowball.board.domain.board.repository.CommentRepository;
 import com.snowball.board.domain.board.repository.PostRepository;
 import org.springframework.stereotype.Service;

@@ -1,0 +1,48 @@
+<!-- posts/edit.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>게시물 수정</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script th:src="@{/js/post.js}"></script>
+</head>
+<body>
+<h1>게시물 수정</h1>
+
+<form id="editPostForm" th:action="@{/posts/{postId}/edit(postId=${post.id})}" method="post">
+  <input type="text" id="titleInput" name="title" th:value="${post.title}" />
+  <textarea id="contentInput" name="content" th:text="${post.content}"></textarea>
+  <button type="submit">수정</button>
+</form>
+<script>
+  $(document).ready(function() {
+    // 게시물 수정 AJAX 처리
+    $('#editPostForm').submit(function(e) {
+      e.preventDefault();
+
+      var postId = $(this).attr('action').split('/').pop();
+      var postData = {
+        title: $('#titleInput').val(),
+        content: $('#contentInput').val()
+      };
+
+      $.ajax({
+        url: '/posts/' + postId + '/edit',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(postData),
+        success: function(response) {
+          alert(response);
+          // 게시물 수정 성공 시, 필요한 동작 수행
+        },
+        error: function(xhr, status, error) {
+          alert('게시물 수정에 실패하였습니다: ' + error);
+          // 게시물 수정 실패 시, 필요한 동작 수행
+        }
+      });
+    });
+  });
+
+</script>
+</body>
+</html>
