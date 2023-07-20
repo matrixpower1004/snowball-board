@@ -70,10 +70,7 @@ public class RestExceptionHandlerAdvisor extends ResponseEntityExceptionHandler 
         return ResponseEntity.status(HttpStatus.NO_CONTENT)
                 .body(ExceptionDto.builder().statusCode(HttpStatus.NO_CONTENT.value())
                         .message(String.format("%s", exception.getMessage()))
-<<<<<<< HEAD
                         .build());
     }
-=======
-                        .build());}
->>>>>>> 843df07 (feat: #11 - add ExceptionHandlerAdvisor)
+
 }
