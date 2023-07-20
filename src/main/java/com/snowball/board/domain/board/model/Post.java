@@ -1,13 +1,10 @@
 package com.snowball.board.domain.board.model;
-
 import com.snowball.board.domain.user.model.User;
 import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import javax.persistence.*;
 import java.sql.Timestamp;
-
-
 @Getter
 @Setter
 @ToString
@@ -18,7 +15,6 @@ import java.sql.Timestamp;
 @Entity
 @Table(name = "post")
 public class Post {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -35,7 +31,6 @@ public class Post {
     @Column (updatable = false)
     private Timestamp createdAt;
     @LastModifiedDate
-    @Column (updatable = false)
+    @Column (updatable = true)
     private Timestamp updatedAt;
 }
-

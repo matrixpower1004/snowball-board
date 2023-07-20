@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title th:text="'SnowBoard - ' + ${title}">SnowBoard - {title}</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<!-- 헤더 영역 -->
+<header>
+  <!-- 글 목록 보기,수정,삭제 버튼 -->
+  <div class="boardList-button-container"><a href="/board">목록</a></div>
+  <div class="boardList-button-container"><a th:href="@{'/board/edit/'+${postId}}">수정</a></div>
+  <div class="boardList-button-container"><a th:href="@{'/board/delete/'+${postId}}">삭제</a></div>
+</header>
+<h1 th:text="${title}"></h1>
+<!-- 게시글 title, 작성자, 생성일자 -->
+<div style="display: flex; justify-content: space-between; align-items: center; width: 50%;">
+  <div style="display: flex; justify-content: flex-end; align-items: center;">
+    <p th:text="'작성자: ' + ${nickName} + '  |  ' + ${createdAt}" style="text-align: right;"></p>
+  </div>
+</div>
+<div id="contentDiv">
+  <!-- 게시글 내용 로드 -->
+</div>
+<div id="commentDiv">
+  <!-- 댓글 Div -->
+  <form method="post" id="commentForm" action="/api/posts/{postId}/comments">
+    <label for="comment">댓글:</label>
+    <input type="text" id="comment" name="content" required>
+    <button type="submit">댓글 추가</button>
+  </form>
+  <div id="comments-container">
+    <!-- 댓글 목록 로드 -->
+  </div>
+</div>
+
+<!-- 대댓글 템플릿 -->
+<script id="reply-template" type="text/template">
+  <div id="replies-container-{{commentId}}" style="margin-left: 40px;">
+    <!-- 대댓글 로드 -->
+  </div>
+</script>
+
+<script type="text/javascript">
+  // 게시글 아이디 값 얻기
+  var postId = window.location.pathname.split('/')[2];
+
+  // AJAX 게시물 내용 load
+  function loadPostContent(postId) {
+    $.ajax({
+      url: "/api/posts/" + postId,
+      type: "GET",
+      dataType: "json",
+      success: function(response) {
+        var content = response.content;
+        $("#contentDiv").html("<p>" + content + "</p>");
+      },
+      error: function(xhr, status, error) {
+        console.log("에러: " + error);
+      }
+    });
+  }
+
+  // 게시물 내용 로드 함수 호출
+  loadPostContent(postId);
+
+  // 댓글 가져오기 함수
+  function getCommentsByPostId(postId) {
+    $.ajax({
+      url: `/api/posts/${postId}/comments`,
+      type: 'GET',
+      dataType: 'json',
+      success: function (comments) {
+        const commentsContainer = $('#comments-container');
+        commentsContainer.empty();
+
+        if (comments && comments.length > 0) {
+          comments.forEach(comment => {
+            // 답글 개수 가져오기
+            getReplyCountByCommentId(comment.id).then(replyCount => {
+              const commentElement = $(`<div>
+                                              <p>댓글 ID: ${comment.id}</p>
+                                              <p>사용자 ID: ${comment.userId}</p>
+                                              <p>내용: ${comment.content}</p>
+                                              <p>작성 시간: ${comment.createdAt}</p>
+                                              <button class="btn-more-replies" data-comment-id="${comment.id}" data-loaded="false">답글 ${replyCount}개</button>
+                                              <div id="replies-container-${comment.id}" style="margin-left: 20px;">
+                                                <!-- 대댓글이 여기에 표시될 것입니다. -->
+                                              </div>
+                                              <hr> <!-- 댓글 사이에 수평선 추가 -->
+                                            </div>
+                                        `);
+
+              commentsContainer.append(commentElement);
+            });
+          });
+        } else {
+          commentsContainer.text('댓글이 없습니다.');
+        }
+      },
+      error: function (error) {
+        console.error('댓글을 가져오는 중 오류가 발생했습니다:', error);
+      }
+    });
+  }
+
+  // 댓글 가져오기 함수 호출
+  getCommentsByPostId(postId);
+
+  // 대댓글 개수 가져오기 함수
+  function getReplyCountByCommentId(commentId) {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: `/api/comments/${commentId}/replies`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (replies) {
+          const replyCount = replies.length;
+          resolve(replyCount);
+        },
+        error: function (error) {
+          reject(error);
+        }
+      });
+    });
+  }
+
+  // 대댓글 가져오기 함수
+  function getRepliesByCommentId(commentId) {
+    $.ajax({
+      url: `/api/comments/${commentId}/replies`,
+      type: 'GET',
+      dataType: 'json',
+      success: function (replies) {
+        const repliesContainer = $(`#replies-container-${commentId}`);
+        repliesContainer.empty();
+
+        if (replies && replies.length > 0) {
+          replies.forEach((reply, index) => {
+            const replyElement = $(`<div>
+                                        <p>답글 ID: ${reply.id}</p>
+                                        <p>사용자 ID: ${reply.userId}</p>
+                                        <p>내용: ${reply.content}</p>
+                                        <p>작성 시간: ${reply.createdAt}</p>
+                                      </div>`);
+            if (index < replies.length - 1) {
+              replyElement.append('<hr>');
+            }
+            repliesContainer.append(replyElement);
+          });
+        } else {
+          repliesContainer.text('답글이 없습니다.');
+        }
+      },
+      error: function (error) {
+        console.error('대댓글을 가져오는 중 오류가 발생했습니다:', error);
+      }
+    });
+  }
+
+  $('#commentForm').submit(function (event) {
+    event.preventDefault();
+    const formData = $(this).serialize();
+    $.ajax({
+      url: $(this).attr('action').replace('{postId}', postId),
+      type: 'POST',
+      data: formData,
+      success: function (comment) {
+        // 댓글 작성 후 댓글 목록 다시 가져오기
+        getCommentsByPostId(postId);
+      },
+      error: function (error) {
+        console.error('댓글을 추가하는 중 오류가 발생했습니다:', error);
+      }
+    });
+  });
+
+  // 대댓글보기 버튼 클릭 이벤트
+  $(document).on('click', '.btn-more-replies', function() {
+    const commentId = $(this).data('comment-id');
+    const repliesContainer = $(`#replies-container-${commentId}`);
+    const isLoaded = $(this).data('loaded');
+
+    if (isLoaded === false) {
+      // 대댓글이 로드되지 않았으면 대댓글을 가져와서 표시.
+      getRepliesByCommentId(commentId);
+      $(this).data('loaded', true);
+      $(this).text('답글 숨기기');
+    } else {
+      // 대댓글이 이미 로드되었으면 대댓글을 숨김.
+      repliesContainer.hide();
+      $(this).data('loaded', false);
+      $(this).text(updateReplyButtonText(commentId));
+    }
+  });
+
+  // 답글 버튼 문구 업데이트 함수
+  function updateReplyButtonText(commentId) {
+    const repliesContainer = $(`#replies-container-${commentId}`);
+    const replyCount = repliesContainer.children('div').length;
+    return `답글 ${replyCount}개`;
+  }
+</script>
+</body>
+</html>

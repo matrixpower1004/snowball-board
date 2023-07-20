@@ -1,10 +1,11 @@
-package com.snowball.board.domain.board.service;
+package com.snowball.board.domain.board.service.impl;
 
-import com.snowball.board.domain.board.dto.CommentDTO;
-import com.snowball.board.domain.board.emtity.Comment;
-import com.snowball.board.domain.board.emtity.Post;
+import com.snowball.board.domain.board.dto.CommentDto;
+import com.snowball.board.domain.board.model.Comment;
+import com.snowball.board.domain.board.model.Post;
 import com.snowball.board.domain.board.repository.CommentRepository;
 import com.snowball.board.domain.board.repository.PostRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,37 +14,30 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class CommentService {
-
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
 
-    public CommentService(CommentRepository commentRepository, PostRepository postRepository) {
-        this.commentRepository = commentRepository;
-        this.postRepository = postRepository;
-    }
-
     @Transactional
-    public CommentDTO createComment(Long postId, String content) {
+    public CommentDto createComment(Long postId, String content) {
         Timestamp currentTime = new Timestamp(System.currentTimeMillis());
 
         Post post = postRepository.findById(postId).orElse(null);
         if (post == null) {
             return null;
         }
-
         Comment comment = new Comment();
         comment.setPost(post);
         comment.setContent(content);
         comment.setCreatedAt(currentTime);
         comment.setUpdatedAt(currentTime);
-
         Comment savedComment = commentRepository.save(comment);
         return mapToDTO(savedComment);
     }
 
     @Transactional
-    public CommentDTO updateComment(Long commentId, String content) {
+    public CommentDto updateComment(Long commentId, String content) {
         Comment comment = commentRepository.findById(commentId).orElse(null);
         if (comment != null) {
             comment.setContent(content);
@@ -53,19 +47,18 @@ public class CommentService {
         }
         return null;
     }
-
     @Transactional
     public void deleteComment(Long commentId) {
         commentRepository.deleteById(commentId);
     }
 
-    public List<CommentDTO> getAllCommentsByPostId(Long postId) {
+    public List<CommentDto> getAllCommentsByPostId(Long postId) {
         List<Comment> comments = commentRepository.findAllByPostId(postId);
         return comments.stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
-    private CommentDTO mapToDTO(Comment comment) {
-        CommentDTO commentDTO = new CommentDTO();
+    private CommentDto mapToDTO(Comment comment) {
+        CommentDto commentDTO = new CommentDto();
         commentDTO.setId(comment.getId());
         commentDTO.setUserId(comment.getUser().getId());
         commentDTO.setPostId(comment.getPost().getId());
