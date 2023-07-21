@@ -22,7 +22,7 @@ public class Reply {
 
     @ManyToOne
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
-    private User user; // User 엔티티와의 관계를 맺습니다.
+    private User user;
 
     @ManyToOne
     @JoinColumn(name = "comment_id", referencedColumnName = "id", nullable = false)

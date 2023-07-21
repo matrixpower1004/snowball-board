@@ -84,7 +84,12 @@
                                               <p>사용자 ID: ${comment.userId}</p>
                                               <p>내용: ${comment.content}</p>
                                               <p>작성 시간: ${comment.createdAt}</p>
-                                              <button class="btn-more-replies" data-comment-id="${comment.id}" data-loaded="false">답글 ${replyCount}개</button>
+                                              <button class="btn-more-replies" data-comment-id="${comment.id}" data-loaded="false">답글 ${replyCount}개 보기</button>
+                                              <button class="btn-delete-comment" data-comment-id="${comment.id}">삭제</button>
+                                              <form method="post" class="replyForm" action="/api/comments/${comment.id}/replies">
+                                                <input type="text" class="replyInput" name="content" required>
+                                                <button type="submit">답글 추가</button>
+                                              </form>
                                               <div id="replies-container-${comment.id}" style="margin-left: 20px;">
                                                 <!-- 대댓글이 여기에 표시될 것입니다. -->
                                               </div>
@@ -159,15 +164,37 @@
     });
   }
 
-  $('#commentForm').submit(function (event) {
-    event.preventDefault();
-    const formData = $(this).serialize();
+  // '답글 보기' 버튼 클릭 이벤트
+  $(document).on('click', '.btn-more-replies', function() {
+    const commentId = $(this).data('comment-id');
+    const isLoaded = $(this).data('loaded');
+    const repliesContainer = $(`#replies-container-${commentId}`);
+
+    if (isLoaded) {
+      repliesContainer.slideToggle();
+    } else {
+      getRepliesByCommentId(commentId);
+      $(this).data('loaded', true);
+    }
+  });
+
+  // 댓글 추가 이벤트
+  $('#commentForm').on('submit', function(e) {
+    e.preventDefault();
+    const commentContent = $('#comment').val();
+
+    var formData = {
+      content: commentContent,
+      // user_id: userId // 이곳에 실제 로그인한 사용자의 ID를 설정합니다.
+    };
+
     $.ajax({
-      url: $(this).attr('action').replace('{postId}', postId),
+      url: `/api/posts/${postId}/comments`,
       type: 'POST',
-      data: formData,
-      success: function (comment) {
-        // 댓글 작성 후 댓글 목록 다시 가져오기
+      dataType: 'json',
+      data: {content: commentContent},
+      success: function(comment) {
+        // 댓글 추가 후 댓글 목록 재로드
         getCommentsByPostId(postId);
       },
       error: function (error) {
@@ -176,31 +203,51 @@
     });
   });
 
-  // 대댓글보기 버튼 클릭 이벤트
-  $(document).on('click', '.btn-more-replies', function() {
-    const commentId = $(this).data('comment-id');
-    const repliesContainer = $(`#replies-container-${commentId}`);
-    const isLoaded = $(this).data('loaded');
+  // 대댓글 추가 이벤트
+  $(document).on('submit', '.replyForm', function(e) {
+    e.preventDefault();
+    const commentId = $(this).prev().data('comment-id');
+    const replyContent = $(this).find('.replyInput').val();
 
-    if (isLoaded === false) {
-      // 대댓글이 로드되지 않았으면 대댓글을 가져와서 표시.
-      getRepliesByCommentId(commentId);
-      $(this).data('loaded', true);
-      $(this).text('답글 숨기기');
-    } else {
-      // 대댓글이 이미 로드되었으면 대댓글을 숨김.
-      repliesContainer.hide();
-      $(this).data('loaded', false);
-      $(this).text(updateReplyButtonText(commentId));
-    }
+    var formData = {
+      content: replyContent,
+      // user_id: userId // 이곳에 실제 로그인한 사용자의 ID를 설정합니다.
+    };
+
+    $.ajax({
+      url: `/api/comments/${commentId}/replies`,
+      type: 'POST',
+      dataType: 'json',
+      data: {content: replyContent},
+      success: function(reply) {
+        // 대댓글 추가 후 대댓글 목록 재로드
+        getRepliesByCommentId(commentId);
+      },
+      error: function (error) {
+        console.error('대댓글을 추가하는 중 오류가 발생했습니다:', error);
+      }
+    });
   });
 
-  // 답글 버튼 문구 업데이트 함수
-  function updateReplyButtonText(commentId) {
-    const repliesContainer = $(`#replies-container-${commentId}`);
-    const replyCount = repliesContainer.children('div').length;
-    return `답글 ${replyCount}개`;
-  }
+  // 댓글 삭제 이벤트
+  $(document).on('click', '.btn-delete-comment', function() {
+    const commentId = $(this).data('comment-id');
+
+    $.ajax({
+      url: `/api/comments/${commentId}`,
+      type: 'DELETE',
+      success: function() {
+        // 댓글 삭제 후 댓글 목록 재로드
+        getCommentsByPostId(postId);
+      },
+      error: function (error) {
+        console.error('댓글을 삭제하는 중 오류가 발생했습니다:', error);
+      }
+    });
+  });
+
 </script>
+
 </body>
 </html>
+

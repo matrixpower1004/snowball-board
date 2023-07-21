@@ -21,6 +21,6 @@ public class PostDto {
     private boolean blindState;
     private UserRole userRole;
     private String nickName;
-    private Timestamp createdAt;
-    private Timestamp updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

@@ -4,7 +4,9 @@ import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import javax.persistence.*;
-import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Getter
 @Setter
 @ToString
@@ -29,8 +31,10 @@ public class Post {
     private boolean blindState;
     @CreatedDate
     @Column (updatable = false)
-    private Timestamp createdAt;
+    private LocalDateTime createdAt;
     @LastModifiedDate
     @Column (updatable = true)
-    private Timestamp updatedAt;
+    private LocalDateTime updatedAt;
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    private List<Comment> comments;
 }
