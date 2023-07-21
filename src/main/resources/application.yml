@@ -5,7 +5,6 @@ server:
       force: true
 spring:
   thymeleaf:
-    thymeleaf:
       prefix: classpath:templates/
       suffix: .html
 
