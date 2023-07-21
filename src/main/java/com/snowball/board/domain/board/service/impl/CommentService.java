@@ -68,7 +68,9 @@ public class CommentService {
     private CommentDto mapToDTO(Comment comment) {
         CommentDto commentDTO = new CommentDto();
         commentDTO.setId(comment.getId());
-        commentDTO.setUserId(comment.getUser().getId());
+        if(comment.getUser() != null) {
+            commentDTO.setUserId(comment.getUser().getId());
+        }
         commentDTO.setPostId(comment.getPost().getId());
         commentDTO.setContent(comment.getContent());
         commentDTO.setCreatedAt(comment.getCreatedAt().toString());

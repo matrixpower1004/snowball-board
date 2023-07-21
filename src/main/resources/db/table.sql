@@ -50,8 +50,8 @@ CREATE TABLE `comment`
     `post_id`    BIGINT                              NOT NULL,
     `user_id`    BIGINT                              NOT NULL,
     `content`    VARCHAR(50)                         NOT NULL,
-    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `created_at` TIMESTAMP   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP            DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (post_id) REFERENCES post (id),
     FOREIGN KEY (user_id) REFERENCES user_tb (id)
 ) DEFAULT CHARSET = utf8mb4;

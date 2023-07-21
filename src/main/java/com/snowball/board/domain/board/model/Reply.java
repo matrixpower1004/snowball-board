@@ -5,6 +5,9 @@ import lombok.*;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,8 +35,13 @@ public class Reply {
     private String content;
 
     @Column(nullable = false)
-    private Timestamp createdAt;
+    private Timestamp createdAt = Timestamp.valueOf(LocalDateTime.now());
 
     @Column(nullable = false)
     private Timestamp updatedAt;
+
+    public Optional<Long> getUserId() {
+        return Optional.ofNullable(user).map(User::getId);
+    }
+
 }

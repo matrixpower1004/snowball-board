@@ -72,7 +72,9 @@ public class ReplyService {
     private ReplyDto mapToDTO(Reply reply) {
         ReplyDto replyDTO = new ReplyDto();
         replyDTO.setId(reply.getId());
-        replyDTO.setUserId(reply.getUser().getId());
+        if(reply.getUser() != null) {
+            replyDTO.setUserId(reply.getUser().getId());
+        }
         replyDTO.setCommentId(reply.getComment().getId());
         replyDTO.setContent(reply.getContent());
         replyDTO.setCreatedAt(reply.getCreatedAt().toString());

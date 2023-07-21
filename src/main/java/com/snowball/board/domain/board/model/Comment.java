@@ -7,6 +7,7 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @Setter
@@ -23,7 +24,7 @@ public class Comment {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = true)
     private User user;
 
     @ManyToOne
@@ -34,11 +35,14 @@ public class Comment {
     private String content;
 
     @Column(nullable = false)
-    private Timestamp createdAt;
+    private Timestamp createdAt = Timestamp.valueOf(LocalDateTime.now());
 
     @Column(nullable = false)
     private Timestamp updatedAt;
 
     @OneToMany(mappedBy = "comment", cascade = CascadeType.REMOVE)
     private List<Reply> replies;
+    public Optional<Long> getUserId() {
+        return Optional.ofNullable(user).map(User::getId);
+    }
 }

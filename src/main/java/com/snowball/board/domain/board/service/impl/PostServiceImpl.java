@@ -6,6 +6,7 @@ import com.snowball.board.domain.board.repository.CommentRepository;
 import com.snowball.board.domain.board.repository.PostRepository;
 import com.snowball.board.domain.board.dto.PostDto;
 import com.snowball.board.domain.board.mapper.PostsMapper;
+import com.snowball.board.domain.board.service.PostService;
 import com.snowball.board.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PostServiceImpl implements com.snowball.board.domain.board.service.PostService {
+public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostsMapper postsMapper;
