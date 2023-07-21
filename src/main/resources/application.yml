@@ -4,6 +4,17 @@ server:
       charset: utf-8
       force: true
 spring:
+  thymeleaf:
+    thymeleaf:
+      prefix: classpath:templates/
+      suffix: .html
+
+  batch:
+    jdbc:
+      initialize-schema: always
+    post-count-threshold: 10
+
+
   datasource:
     url: jdbc:h2:mem:test;MODE=MySQL
     driver-class-name: org.h2.Driver
@@ -44,3 +55,4 @@ logging:
   level:
     '[com.snowball.board]': DEBUG
     '[org.hibernate.type]': TRACE
+    '[org.springframework.batch]': DEBUG
