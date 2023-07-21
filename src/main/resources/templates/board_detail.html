@@ -25,7 +25,7 @@
 </div>
 <div id="commentDiv">
   <!-- 댓글 Div -->
-  <form method="post" id="commentForm" action="/api/posts/{postId}/comments">
+  <form method="post" id="commentForm" action="/api/posts/${postId}/comments">
     <label for="comment">댓글:</label>
     <input type="text" id="comment" name="content" required>
     <button type="submit">댓글 추가</button>
@@ -147,11 +147,12 @@
           replies.forEach((reply, index) => {
 
             const replyElement = $(`<div>
-                                        <p>답글 ID: ${reply.id}</p>
-                                        <p>사용자 ID: ${reply.userId}</p>
-                                        <p>내용: ${reply.content}</p>
-                                        <p>작성 시간: ${reply.createdAt}</p>
-                                      </div>`);
+                                      <p>답글 ID: ${reply.id}</p>
+                                      <p>사용자 ID: ${reply.userId}</p>
+                                      <p>내용: ${reply.content}</p>
+                                      <p>작성 시간: ${reply.createdAt}</p>
+                                      <button class="btn-delete-reply" data-reply-id="${reply.id}" data-comment-id="${commentId}">삭제</button>
+                                    </div>`);
             if (index < replies.length - 1) {
               replyElement.append('<hr>');
             }
@@ -253,8 +254,24 @@
     });
   });
 
+  // 대댓글 삭제 이벤트
+  $(document).on('click', '.btn-delete-reply', function() {
+    const replyId = $(this).data('reply-id');
+    const commentId = $(this).data('comment-id'); // commentId 값을 얻음
+
+    $.ajax({
+      url: `/api/replies/${replyId}`,
+      type: 'DELETE',
+      success: function() {
+        getRepliesByCommentId(commentId); // commentId 값을 사용하여 댓글 목록 재로드
+      },
+      error: function (error) {
+        console.error('대댓글을 삭제하는 중 오류가 발생했습니다:', error);
+      }
+    });
+  });
+
 </script>
 
 </body>
 </html>
-
