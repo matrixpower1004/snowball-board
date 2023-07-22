@@ -6,7 +6,9 @@ public enum ExceptionMessage {
     INNER_SERVER_ERROR("서버 내부 오류가 발생했습니다."),
     ALREADY_EXISTS_USER("이미 존재하는 유저입니다."),
     DUPLICATE_NICKNAME("해당 닉네임은 이미 사용 중입니다."),
-    DUPLICATE_EMAIL("해당 이메일은 이미 사용 중입니다.");
+    DUPLICATE_EMAIL("해당 이메일은 이미 사용 중입니다."),
+    INVALID_FIELD("제약 사항에 맞지 않습니다.");
+
     private final String message;
 
     ExceptionMessage(String message) {

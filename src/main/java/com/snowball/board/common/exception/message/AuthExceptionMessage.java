@@ -3,6 +3,7 @@ package com.snowball.board.common.exception.message;
 public enum AuthExceptionMessage {
     MISMATCH_PASSWORD("비밀번호가 일치하지 않습니다."),
     ALREADY_LOGOUT_USER("이미 로그아웃된 회원입니다."),
+    AUTH_NOT_MATCH("로그인 정보가 일치 하지 않습니다."),
     NOT_AUTHORIZED_ACCESS("인증되지 않은 접근입니다."),
     NO_PERMISSION("권한이 없습니다."),
     FAIL_TOKEN_CHECK("토큰 검증에 실패했습니다."),
