@@ -19,8 +19,6 @@ public class UserApiController {
 
     private final UserService userService;
 
-    // TODO: 2023-07-19 api for check duplicate email 
-
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserInfo(@PathVariable Long id) {
         return new ResponseEntity<>(userService.getUserInfo(id), HttpStatus.OK);
