@@ -13,7 +13,6 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.IOException;
 
 @RestController
 @RequestMapping("api/auth")
@@ -24,15 +23,6 @@ public class AuthenticationController {
     @Autowired
     public AuthenticationController(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
-    }
-
-    @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticate(@RequestBody @Valid AuthenticationRequest authenticationRequest, HttpServletResponse response) {
-        AuthenticationResponse authenticationResponse = authenticationService.authenticate(authenticationRequest);
-        response.addCookie(generateHttponlyCookie(authenticationResponse.getRefreshToken()));
-        //set refresh token null to response, only set in httpOnly secure cookie
-        authenticationResponse.setRefreshToken(null);
-        return new ResponseEntity<>(authenticationResponse, HttpStatus.OK);
     }
 
     @PostMapping("/register")
@@ -46,8 +36,7 @@ public class AuthenticationController {
 
     // Use HttpOnly Secure Cookie to refresh token
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@CookieValue(name = "refresh_token") HttpServletRequest request) throws IOException {
-
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
         return new ResponseEntity<>(authenticationService.refreshAccessToken(request), HttpStatus.OK);
     }
 
