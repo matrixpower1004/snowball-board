@@ -1,8 +1,8 @@
 package com.snowball.board.common.exception.handler;
 
 import com.snowball.board.common.exception.dto.ExceptionDto;
+import com.snowball.board.common.exception.message.ExceptionMessage;
 import com.snowball.board.common.exception.model.ConflictException;
-import com.snowball.board.common.exception.model.InvalidAuthException;
 import com.snowball.board.common.exception.model.NoContentException;
 import com.snowball.board.common.exception.model.UnauthorizedException;
 import org.hibernate.exception.ConstraintViolationException;
@@ -20,11 +20,19 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 @RestControllerAdvice
 public class RestExceptionHandlerAdvisor extends ResponseEntityExceptionHandler {
 
-    @ExceptionHandler(value = {ConstraintViolationException.class, InvalidAuthException.class, IllegalStateException.class})
-    public ResponseEntity<ExceptionDto> exceptionHandler(ConstraintViolationException exception) {
+    @ExceptionHandler(value = {IllegalStateException.class})
+    public ResponseEntity<ExceptionDto> exceptionHandler(Exception exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ExceptionDto.builder().statusCode(HttpStatus.BAD_REQUEST.value())
                         .message(String.format("%s", exception.getMessage()))
+                        .build());
+    }
+
+    @ExceptionHandler(value = {ConstraintViolationException.class})
+    public ResponseEntity<ExceptionDto> exceptionHandler(ConstraintViolationException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(ExceptionDto.builder().statusCode(HttpStatus.BAD_REQUEST.value())
+                        .message(String.format("%s", ExceptionMessage.INVALID_FIELD))
                         .build());
     }
 
