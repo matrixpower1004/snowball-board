@@ -1,15 +1,22 @@
-package com.snowball.board.config;
+package com.snowball.board.common.util;
 
+import com.snowball.board.common.exception.message.AuthExceptionMessage;
+import com.snowball.board.common.exception.model.UnauthorizedException;
+import com.snowball.board.config.UserPrincipleDto;
+import com.snowball.board.domain.auth.service.CustomUserDetailsService;
 import com.snowball.board.domain.user.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Date;
@@ -19,8 +26,10 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
-public class JwtService {
+@Component
+public class JwtUtil {
+
+    private final CustomUserDetailsService userDetailsService;
 
     @Value("${application.security.jwt.secret-key}")
     private String SECRET_KEY;
@@ -31,16 +40,25 @@ public class JwtService {
     @Value("${application.security.jwt.refresh-token.expiration}")
     private Long REFRESH_EXPIRATION;
 
+    @Autowired
+    public JwtUtil(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
     public String extractUserAccount(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+    public Long extractUserId(String token) {
+        return Long.valueOf(extractClaim(token, Claims::getId));
+    }
+
+    private  <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    public String generateToken(Map<String, Object>extraClaims, UserDetails userDetails) {
+    private String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         return buildToken(extraClaims, userDetails, EXPIRATION);
     }
 
@@ -48,8 +66,8 @@ public class JwtService {
         Map<String, Object> extraClaims = new HashMap<>();
         User user = (User) userDetails;
         List<String> roles = user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.toList());
+                .map(GrantedAuthority::getAuthority).toList();
+        extraClaims.put("userId", user.getId());
         extraClaims.put("roles", roles);
 
         return generateToken(extraClaims, userDetails);
@@ -59,9 +77,16 @@ public class JwtService {
         return buildToken(new HashMap<>(), userDetails, REFRESH_EXPIRATION);
     }
 
-    public boolean isTokenValid(String token, UserDetails userDetails) {
+    public boolean isValidToken(String token) {
         final String userAccount = extractUserAccount(token);
-        return (userAccount.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        UserDetails userDetails = userDetailsService.loadUserByUsername(userAccount);
+        if (!userAccount.equals(userDetails.getUsername())) {
+            throw new UnauthorizedException(AuthExceptionMessage.MISMATCH_TOKEN.message());
+        }
+        if (isTokenExpired(token)) {
+            throw new UnauthorizedException(AuthExceptionMessage.TOKEN_VALID_TIME_EXPIRED.message());
+        }
+        return true;
     }
 
     private boolean isTokenExpired(String token) {
@@ -98,6 +123,20 @@ public class JwtService {
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public Authentication getAuthenticationParseToken(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Long userId = (long) (int) claims.get("userId");
+            List<String> userRole = (List<String>) claims.get("roles");
+
+
+            UserPrincipleDto userPrincipleDto = new UserPrincipleDto(userId, userRole);
+            return new UsernamePasswordAuthenticationToken(userPrincipleDto, null, userPrincipleDto.getAuthorities());
+        } catch (Exception e) {
+            throw new UnauthorizedException(AuthExceptionMessage.FAIL_TOKEN_CHECK.message());
+        }
     }
 
 }
