@@ -6,11 +6,11 @@ import com.snowball.board.common.exception.message.ExceptionMessage;
 import com.snowball.board.common.exception.model.ConflictException;
 import com.snowball.board.common.exception.model.NoContentException;
 import com.snowball.board.common.exception.model.UnauthorizedException;
-import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,9 +20,9 @@ class RestExceptionHandlerAdvisorTest {
 
     @Test
     void handleConstraintViolationExceptionTest() {
-        ConstraintViolationException exception = new ConstraintViolationException(ExceptionMessage.MISSING_REQUIRED_FIELD.message(), null, null);
+        Exception exception = new Exception(ExceptionMessage.MISSING_REQUIRED_FIELD.message());
 
-        ResponseEntity<ExceptionDto> response = exceptionHandlerAdvisor.exceptionHandler(exception);
+        ResponseEntity<ExceptionDto> response = exceptionHandlerAdvisor.exceptionHandler((HttpClientErrorException.BadRequest) exception);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getBody().getStatusCode());
