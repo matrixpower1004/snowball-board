@@ -1,6 +1,7 @@
 package com.snowball.board.domain.user.service;
 
 import com.snowball.board.common.exception.message.ExceptionMessage;
+import com.snowball.board.common.exception.model.ConflictException;
 import com.snowball.board.domain.user.dto.*;
 import com.snowball.board.domain.user.model.User;
 import com.snowball.board.domain.user.repository.UserRepository;
@@ -34,15 +35,13 @@ public class UserService {
     private void validateDuplicateNickName(String nickName) {
         Optional<User> findUser = userRepository.findByNickName(nickName);
         if (findUser.isPresent()) {
-            throw new IllegalStateException(ExceptionMessage.DUPLICATE_NICKNAME.message());
+            throw new ConflictException(ExceptionMessage.DUPLICATE_NICKNAME.message());
         }
     }
-
-    // TODO: 2023-07-20 email 
     private void validateDuplicateEmail(String email) {
-        Optional<User> findUser = userRepository.findByNickName(email);
+        Optional<User> findUser = userRepository.findByEmail(email);
         if (findUser.isPresent()) {
-            throw new IllegalStateException(ExceptionMessage.DUPLICATE_EMAIL.message());
+            throw new ConflictException(ExceptionMessage.DUPLICATE_EMAIL.message());
         }
     }
 
