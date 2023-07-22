@@ -17,4 +17,8 @@ public class UserController {
         return "register";
     }
 
+    @GetMapping("/user/update")
+    public String updateUserInfo() {
+        return "updateUser";
+    }
 }
