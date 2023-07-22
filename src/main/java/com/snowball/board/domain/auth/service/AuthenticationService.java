@@ -4,7 +4,7 @@ import com.snowball.board.common.exception.message.AuthExceptionMessage;
 import com.snowball.board.common.exception.message.ExceptionMessage;
 import com.snowball.board.common.exception.model.UnauthorizedException;
 import com.snowball.board.common.util.UserRole;
-import com.snowball.board.config.JwtService;
+import com.snowball.board.common.util.JwtUtil;
 import com.snowball.board.domain.auth.dto.AuthenticationRequest;
 import com.snowball.board.domain.auth.dto.AuthenticationResponse;
 import com.snowball.board.domain.auth.dto.LogoutResponse;
@@ -13,10 +13,8 @@ import com.snowball.board.domain.token.repository.TokenRepository;
 import com.snowball.board.domain.user.dto.RegisterRequest;
 import com.snowball.board.domain.user.model.User;
 import com.snowball.board.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +25,19 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final TokenRepository tokenRepository;
-    private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
+    @Autowired
+    public AuthenticationService(UserRepository userRepository, TokenRepository tokenRepository, BCryptPasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.tokenRepository = tokenRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
 
     /**
      * Register User
@@ -56,8 +59,8 @@ public class AuthenticationService {
                 .build();
         validateUserAccountDuplicate(user.getUserAccount());
         userRepository.save(user);
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
+        String accessToken = jwtUtil.generateToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
         saveRefreshToken(user, refreshToken);
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
@@ -78,43 +81,21 @@ public class AuthenticationService {
     }
 
     /**
-     * Create new token, refresh_token if authenticate success
-     * RevokeAll exist tokens
-     *
-     * @param request
-     * @return AuthenticationResponse include access,refresh token
-     */
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUserAccount(),
-                        request.getPassword()
-                )
-        );
-        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow((() -> new IllegalStateException(AuthExceptionMessage.USER_NOT_FOUND.message())));
-        String accessToken = jwtService.generateToken(user);
-        String refreshToken = jwtService.generateRefreshToken(user);
-        revokeAllUserTokens(user);
-        saveRefreshToken(user, refreshToken);
-        return AuthenticationResponse.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
-    }
-
-    /**
      * Logout
      * @param request
      * @return LogoutResponse
      */
     public LogoutResponse logout(AuthenticationRequest request) {
-        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow((() -> new IllegalStateException(AuthExceptionMessage.USER_NOT_FOUND.message())));        revokeAllUserTokens(user);
+        User user = userRepository.findByUserAccount(request.getUserAccount()).orElseThrow((() -> new IllegalStateException(AuthExceptionMessage.USER_NOT_FOUND.message())));
+        revokeAllUserTokens(user);
         return LogoutResponse.builder()
                 .message("성공적으로 로그아웃 되었습니다.")
                 .build();
     }
 
-    private void saveRefreshToken(User user, String jwtToken) {
+    public void saveRefreshToken(User user, String jwtToken) {
+        //revoke before save new refresh token
+        revokeAllUserTokens(user);
         Token token = Token.builder()
                 .user(user)
                 .token(jwtToken)
@@ -144,7 +125,6 @@ public class AuthenticationService {
 
     public AuthenticationResponse refreshAccessToken(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
-        System.out.println(cookies);
         String refreshToken = null;
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -156,13 +136,13 @@ public class AuthenticationService {
         }
 
         if (refreshToken != null) {
-            String userAccount = jwtService.extractUserAccount(refreshToken);
+            String userAccount = jwtUtil.extractUserAccount(refreshToken);
 
             User user = userRepository.findByUserAccount(userAccount)
                     .orElseThrow(() -> new UnauthorizedException(AuthExceptionMessage.FAIL_TOKEN_CHECK.message()));
 
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                String accessToken = jwtService.generateToken(user);
+            if (jwtUtil.isValidToken(refreshToken)) {
+                String accessToken = jwtUtil.generateToken(user);
 
                 return AuthenticationResponse.builder()
                         .accessToken(accessToken)
