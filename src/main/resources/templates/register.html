@@ -2,6 +2,8 @@
 <head>
   <meta charset="UTF-8">
   <title>Register User</title>
+  <script src="/js/tokenManager.js"></script>
+  <script src="/js/login.js"></script>
 </head>
 <body>
 <h2>Register User</h2>
@@ -26,17 +28,21 @@
   <button type="submit" id="registerButton" disabled>Register</button>
 </form>
 <script>
+  let isEmailValid = false;
+  let isNickNameValid = false;
+
   document.getElementById('registerForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
-    var form = event.target;
-    var data = {
+    const form = event.target;
+    const data = {
       userAccount: form.elements['userAccount'].value,
       password: form.elements['password'].value,
       email: form.elements['email'].value,
       nickName: form.elements['nickName'].value,
       userName: form.elements['userName'].value
     };
+    
 
     fetch('/api/auth/register', {
       method: 'POST',
@@ -51,7 +57,7 @@
                 const accessToken = responseData.access_token;
                 if (isValidAccessToken(accessToken)) {
                   localStorage.setItem('access_token', responseData.access_token);
-                  window.location.href = "/post";
+                  window.location.href = "/board";
                 }
 
               } else {
@@ -65,6 +71,7 @@
   });
 
   // Add event listeners for email and nickname duplicate check buttons
+  // todo check validate before send to sever
   document.getElementById('emailCheckButton').addEventListener('click', function() {
     const email = document.getElementById('email').value;
     checkDuplicateEmail(email);
@@ -85,6 +92,7 @@
     })
             .then(handleDuplicatedCheck)
             .then(responseData => {
+              isEmailValid = true
               enableRegisterButtonIfValid();
             })
             .catch(error => {
@@ -98,10 +106,11 @@
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ nickname: nickname })
+      body: JSON.stringify({ nickName: nickname })
     })
             .then(handleDuplicatedCheck)
             .then(responseData => {
+              isNickNameValid = true
               enableRegisterButtonIfValid();
             })
             .catch(error => {
@@ -112,7 +121,7 @@
   function enableRegisterButtonIfValid() {
     const email = document.getElementById('email').value;
     const nickName = document.getElementById('nickName').value;
-    if (isValidEmail(email) && isValidNickname(nickName)) {
+    if (isValidEmail(email) && isEmailValid && isValidNickname(nickName) && isNickNameValid) {
       document.getElementById('registerButton').removeAttribute('disabled');
     }
   }
@@ -132,12 +141,10 @@
       // If the response status code is 2xx (success), continue with the registration process
       enableRegisterButtonIfValid()
     } else {
-      // If the response status code is not 2xx (error), handle the error
-      if (response.status === 409) {
-        alert("이미 존재합니다");
-      } else {
-        alert("가입에 실패하였습니다.");
-      }
+      response.json().then(exceptionDto => {
+        // Extract the message from the ExceptionDto and display it in the alert
+        alert(exceptionDto.message);
+      });
       throw new Error("duplicate check failed.");
     }
   }
@@ -147,44 +154,14 @@
       // If the response status code is 2xx (success), continue with the registration process
       return response.json();
     } else {
-      // If the response status code is not 2xx (error), handle the error
-      if (response.status === 401) {
-        alert("가입 실패. 정보를 확인해주세요.");
-      } else {
-        alert("가입에 실패하였습니다.");
-      }
+      response.json().then(exceptionDto => {
+        // Extract the message from the ExceptionDto and display it in the alert
+        alert(exceptionDto.message);
+      });
       throw new Error("Registration failed.");
     }
   }
 
-  function isValidAccessToken(accessToken) {
-    if (!accessToken) {
-      alert("로그인 실패. 생성된 토큰이 없어용")
-      return false; // Access token not exist
-    }
-
-    const tokenParts = accessToken.split('.');
-    if (tokenParts.length !== 3) {
-      alert("로그인 실패. 토큰이 규격이 엉망이에요")
-      return false; // Invalid token format
-    }
-
-    // Split the access token into its three parts: header, payload, and signature
-    const header = tokenParts[0];
-    const payload = tokenParts[1];
-    const signature = tokenParts[2];
-
-    const decodedPayload = JSON.parse(atob(payload));
-    const expirationDate = new Date(decodedPayload.exp * 1000);
-    const now = new Date();
-    if (now >= expirationDate) {
-      alert("로그인 실패. 토큰이 만료됬어요")
-      return false; // Token has expired
-    }
-
-    // token is valid
-    return true;
-  }
 </script>
 </body>
 </html>

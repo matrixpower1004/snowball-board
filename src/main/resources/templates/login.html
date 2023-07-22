@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Login</title>
-    <script src="/js/check.js"></script>
-    <script src="/js/login.js"></script>
+    <script src="/js/tokenManager.js"></script>
 </head>
 <body>
 <h2>Login</h2>
@@ -13,7 +12,18 @@
     <input type="password" id="password" name="password" placeholder="Password" required><br>
     <button type="submit">Login</button>
 </form>
+<button id="refreshToken">Refresh_token</button>
+
+
 <script>
+    document.getElementById('refreshToken').addEventListener('click', function (event) {
+        event.preventDefault();
+        fetch('/api/auth/refresh-token', {
+            method: 'POST'
+        })
+            .then(handleLoginResponse);
+    });
+
     document.getElementById('loginForm').addEventListener('submit', function(event) {
         event.preventDefault();
 
@@ -49,33 +59,18 @@
             });
     });
 
-    function isValidAccessToken(accessToken) {
-        if (!accessToken) {
-            alert("로그인 실패. 생성된 토큰이 없어용")
-            return false; // Access token not exist
+    function handleLoginResponse(response) {
+        if (response.ok) {
+            // If the response status code is 2xx (success), continue with the login process
+            return response.json();
+        } else {
+            // If the response status code is not 2xx (error), handle the error
+            response.json().then(exceptionDto => {
+                // Extract the message from the ExceptionDto and display it in the alert
+                alert(exceptionDto.message);
+            });
+            throw new Error("Login failed.");
         }
-
-        const tokenParts = accessToken.split('.');
-        if (tokenParts.length !== 3) {
-            alert("로그인 실패. 토큰이 규격이 엉망이에요")
-            return false; // Invalid token format
-        }
-
-        // Split the access token into its three parts: header, payload, and signature
-        const header = tokenParts[0];
-        const payload = tokenParts[1];
-        const signature = tokenParts[2];
-
-        const decodedPayload = JSON.parse(atob(payload));
-        const expirationDate = new Date(decodedPayload.exp * 1000);
-        const now = new Date();
-        if (now >= expirationDate) {
-            alert("로그인 실패. 토큰이 만료됬어요")
-            return false; // Token has expired
-        }
-
-        // token is valid
-        return true;
     }
 </script>
 </body>
