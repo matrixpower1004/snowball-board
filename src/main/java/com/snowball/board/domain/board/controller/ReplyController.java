@@ -14,7 +14,7 @@ import java.util.List;
 public class ReplyController {
     private final ReplyService replyService;
 
-    @PostMapping("/comments/{commentId}/reply")
+    @PostMapping("/comments/{commentId}/replies")
     public ResponseEntity<ReplyDto> createReply(@PathVariable Long commentId, @RequestBody String content) {
         Long userId = 1L;
 

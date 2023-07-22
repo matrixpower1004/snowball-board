@@ -1,5 +1,8 @@
 package com.snowball.board.domain.board.dto;
 import lombok.*;
+
+import java.util.Optional;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -7,11 +10,13 @@ import lombok.*;
 @ToString
 @EqualsAndHashCode
 public class CommentDto {
-
     private Long id;
-    private Long userId;
+    private Optional<Long> userId;
     private Long postId;
     private String content;
     private String createdAt;
     private String updatedAt;
+
+    public void setUserId(Long id) {
+    }
 }

@@ -25,7 +25,7 @@
 </div>
 <div id="commentDiv">
   <!-- 댓글 Div -->
-  <form method="post" id="commentForm" action="/api/posts/{postId}/comments">
+  <form method="post" id="commentForm" action="/api/posts/${postId}/comments">
     <label for="comment">댓글:</label>
     <input type="text" id="comment" name="content" required>
     <button type="submit">댓글 추가</button>
@@ -79,6 +79,8 @@
           comments.forEach(comment => {
             // 답글 개수 가져오기
             getReplyCountByCommentId(comment.id).then(replyCount => {
+              const commentContent = comment.content.split(':')[1];
+              const commentTime = comment.createdAt || '작성 시간 정보 없음';
               const commentElement = $(`<div>
                                               <p>댓글 ID: ${comment.id}</p>
                                               <p>사용자 ID: ${comment.userId}</p>
@@ -143,12 +145,14 @@
 
         if (replies && replies.length > 0) {
           replies.forEach((reply, index) => {
+
             const replyElement = $(`<div>
-                                        <p>답글 ID: ${reply.id}</p>
-                                        <p>사용자 ID: ${reply.userId}</p>
-                                        <p>내용: ${reply.content}</p>
-                                        <p>작성 시간: ${reply.createdAt}</p>
-                                      </div>`);
+                                      <p>답글 ID: ${reply.id}</p>
+                                      <p>사용자 ID: ${reply.userId}</p>
+                                      <p>내용: ${reply.content}</p>
+                                      <p>작성 시간: ${reply.createdAt}</p>
+                                      <button class="btn-delete-reply" data-reply-id="${reply.id}" data-comment-id="${commentId}">삭제</button>
+                                    </div>`);
             if (index < replies.length - 1) {
               replyElement.append('<hr>');
             }
@@ -191,9 +195,11 @@
     $.ajax({
       url: `/api/posts/${postId}/comments`,
       type: 'POST',
+      contentType: 'application/json',
       dataType: 'json',
-      data: {content: commentContent},
+      data: JSON.stringify(formData),
       success: function(comment) {
+        var commentContent = comment.content;
         // 댓글 추가 후 댓글 목록 재로드
         getCommentsByPostId(postId);
       },
@@ -217,9 +223,11 @@
     $.ajax({
       url: `/api/comments/${commentId}/replies`,
       type: 'POST',
+      contentType: 'application/json',
       dataType: 'json',
-      data: {content: replyContent},
+      data: JSON.stringify(formData),
       success: function(reply) {
+        var replyContent = reply.content;
         // 대댓글 추가 후 대댓글 목록 재로드
         getRepliesByCommentId(commentId);
       },
@@ -246,8 +254,24 @@
     });
   });
 
+  // 대댓글 삭제 이벤트
+  $(document).on('click', '.btn-delete-reply', function() {
+    const replyId = $(this).data('reply-id');
+    const commentId = $(this).data('comment-id'); // commentId 값을 얻음
+
+    $.ajax({
+      url: `/api/replies/${replyId}`,
+      type: 'DELETE',
+      success: function() {
+        getRepliesByCommentId(commentId); // commentId 값을 사용하여 댓글 목록 재로드
+      },
+      error: function (error) {
+        console.error('대댓글을 삭제하는 중 오류가 발생했습니다:', error);
+      }
+    });
+  });
+
 </script>
 
 </body>
 </html>
-

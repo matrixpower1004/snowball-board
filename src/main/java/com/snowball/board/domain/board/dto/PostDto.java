@@ -3,7 +3,6 @@ package com.snowball.board.domain.board.dto;
 import lombok.*;
 import com.snowball.board.common.util.UserRole;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 @Getter

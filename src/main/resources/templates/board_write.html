@@ -43,7 +43,6 @@
       ],
     });
 
-    // 폼 제출 시 동작 설정
     $('#postForm').submit(function(event) {
       event.preventDefault(); // 기본 폼 제출 동작 방지
 
@@ -58,8 +57,7 @@
       // 폼 데이터 가져오기
       var formData = {
         title: $('#title').val(),
-        content: $('.summernote').summernote('code'),
-        // user_id: userId // 이 부분을 추가합니다. 이곳에 실제 로그인한 사용자의 ID를 설정하면 됩니다.
+        content: $('.summernote').summernote('code')
       };
 
       // Ajax 요청으로 게시물 등록
